@@ -12,11 +12,13 @@ import mdcheck.cli
 import dockcert.cli
 import qmcert.cli
 import adsorpqc.cli
+import alphacert.cli
 
 from mdcheck.core.scoring import assess_trajectory_quality
 from dockcert.core.scoring import assess_docking_quality
 from qmcert.core.scoring import assess_qm_quality
 from adsorpqc.core.scoring import assess_adsorption_quality
+from alphacert.core.scoring import assess_alphafold_quality
 
 from simcert.orchestrator import run_multiscale_audit
 from simcert.meta_report import generate_simcert_meta_report
@@ -39,8 +41,8 @@ def print_banner():
 
 def run_demo_all(output_dir: str = "simcert_full_demo_output"):
     """
-    Executes a comprehensive multi-scale project demonstration certifying all 4 tiers
-    (Molecular Dynamics, Docking, Quantum Chemistry, and Adsorption).
+    Executes a comprehensive multi-scale project demonstration certifying all 5 tiers
+    (Molecular Dynamics, Docking, Quantum Chemistry, Adsorption, and AlphaFold).
     """
     print(f"\n[SimCert] Running Full-Suite Multi-Scale Demonstration...")
     os.makedirs(output_dir, exist_ok=True)
@@ -64,8 +66,13 @@ def run_demo_all(output_dir: str = "simcert_full_demo_output"):
     adsorp_dir = os.path.join(output_dir, "adsorption")
     print("\n--- [Tier 4: Adsorption & GCMC Simulation Certification (AdsorpQC)] ---")
     adsorpqc.cli.run_demo(output_dir=adsorp_dir)
+
+    # 5. Run AlphaCert demo
+    alpha_dir = os.path.join(output_dir, "alpha")
+    print("\n--- [Tier 5: AlphaFold Structure & Confidence Certification (AlphaCert)] ---")
+    alphacert.cli.run_demo(output_dir=alpha_dir)
     
-    # 5. Build consolidated project report
+    # 6. Build consolidated project report
     print("\n--- [Generating Consolidated SimCert Project Summary Dashboard] ---")
     
     # Sample reports for meta-dashboard
@@ -82,12 +89,20 @@ def run_demo_all(output_dir: str = "simcert_full_demo_output"):
     # Adsorption
     adsorp_rep = assess_adsorption_quality(metadata={"framework": "Mg-MOF-74", "adsorbate": "CO2", "temperature_k": 298.15}, pressure_isotherm=np.array([0.1, 0.5, 1.0, 2.0]), loading_isotherm=np.array([1.2, 4.5, 6.8, 8.2]))
     
+    # AlphaFold
+    alpha_rep = assess_alphafold_quality(
+        metadata={"name": "Target Kinase", "engine": "AlphaFold2"},
+        plddt_values=[92.0]*100,
+        pae_matrix=np.ones((100, 100))*3.0
+    )
+
     meta_rep = run_multiscale_audit(
         project_name="Multi-Scale Drug Discovery & Nanoporous Delivery Project",
         md_report=md_rep,
         dock_report=dock_rep,
         qm_report=qm_rep,
-        adsorp_report=adsorp_rep
+        adsorp_report=adsorp_rep,
+        alpha_report=alpha_rep
     )
     
     meta_html = os.path.join(output_dir, "simcert_project_summary.html")
@@ -96,10 +111,11 @@ def run_demo_all(output_dir: str = "simcert_full_demo_output"):
     print("\n" + "="*75)
     print(f" [SIMCERT CONSOLIDATED STATUS] Overall Multi-Scale Quality: {meta_rep.overall_status}")
     print("="*75)
-    print(f"  * Tier 1 (Molecular Dynamics): PASS (Report in {md_dir}/)")
-    print(f"  * Tier 2 (Molecular Docking) : PASS (Report in {dock_dir}/)")
-    print(f"  * Tier 3 (Quantum Chemistry) : PASS (Report in {qm_dir}/)")
-    print(f"  * Tier 4 (Adsorption in MOFs): PASS (Report in {adsorp_dir}/)")
+    print(f"  * Tier 1 (Molecular Dynamics)  : PASS (Report in {md_dir}/)")
+    print(f"  * Tier 2 (Molecular Docking)   : PASS (Report in {dock_dir}/)")
+    print(f"  * Tier 3 (Quantum Chemistry)   : PASS (Report in {qm_dir}/)")
+    print(f"  * Tier 4 (Adsorption in MOFs)  : PASS (Report in {adsorp_dir}/)")
+    print(f"  * Tier 5 (AlphaFold Structures): PASS (Report in {alpha_dir}/)")
     print("="*75)
     print(f"\nProject Hub Ready at: {os.path.abspath(meta_html)}\n")
 
@@ -109,13 +125,13 @@ def print_citation():
   author = {Monreal-Hern\\'andez, Andre},
   title = {{SimCert: A Unified Scientific Simulation Quality-Control and Reproducibility Meta-Framework}},
   year = {2026},
-  version = {1.0.0},
+  version = {1.1.0},
   publisher = {Zenodo},
   url = {https://github.com/amonreal/simcert}
 }"""
     print("\nIf you use the SimCert umbrella meta-framework in your research, please cite:\n")
     print("APA Style:")
-    print("Monreal-Hernández, A. (2026). SimCert: A Unified Scientific Simulation Quality-Control and Reproducibility Meta-Framework (v1.0.0). Zenodo. https://github.com/amonreal/simcert\n")
+    print("Monreal-Hernández, A. (2026). SimCert: A Unified Scientific Simulation Quality-Control and Reproducibility Meta-Framework (v1.1.0). Zenodo. https://github.com/amonreal/simcert\n")
     print("BibTeX:")
     print(bib)
     print()
@@ -135,6 +151,7 @@ def main():
     subparsers.add_parser("dock", help="Delegate to DockCert (Molecular Docking & Screening Certification)")
     subparsers.add_parser("qm", help="Delegate to QMCert (Quantum Chemistry & DFT Certification)")
     subparsers.add_parser("adsorp", help="Delegate to AdsorpQC (Adsorption & GCMC Simulation Validation)")
+    subparsers.add_parser("alpha", help="Delegate to AlphaCert (AlphaFold & Protein Structure Certification)")
     
     demo_p = subparsers.add_parser("demo-all", help="Run full multi-scale demonstration benchmark")
     demo_p.add_argument("-o", "--output", default="simcert_full_demo_output", help="Output directory")
@@ -161,6 +178,9 @@ def main():
     elif first_arg == "adsorp":
         sys.argv = [sys.argv[0]] + sys.argv[2:]
         adsorpqc.cli.main()
+    elif first_arg == "alpha":
+        sys.argv = [sys.argv[0]] + sys.argv[2:]
+        alphacert.cli.main()
     elif first_arg == "demo-all":
         print_banner()
         out = "simcert_full_demo_output"

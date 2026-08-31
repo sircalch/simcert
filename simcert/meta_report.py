@@ -1,22 +1,22 @@
 """
-Consolidated Meta-Report Generator for SimCert.
+Consolidated Project Executive Dashboard HTML Generator for SimCert.
 """
 
 import os
 import jinja2
 from simcert.orchestrator import SimCertProjectReport
 
-META_HTML_TEMPLATE = """<!DOCTYPE html>
+HTML_TEMPLATE = """<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SimCert Project Quality Summary</title>
+    <title>SimCert Project Summary Dashboard</title>
     <style>
         :root {
-            --bg-color: #0b0f19;
-            --card-bg: #151e2e;
-            --card-border: #26354a;
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --card-border: #334155;
             --text-primary: #f8fafc;
             --text-secondary: #94a3b8;
             --pass-color: #10b981;
@@ -26,7 +26,7 @@ META_HTML_TEMPLATE = """<!DOCTYPE html>
             --fail-color: #ef4444;
             --fail-bg: rgba(239, 68, 68, 0.15);
             --accent-blue: #38bdf8;
-            --accent-purple: #a855f7;
+            --accent-purple: #c084fc;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -52,40 +52,50 @@ META_HTML_TEMPLATE = """<!DOCTYPE html>
         .status-badge {
             display: inline-flex;
             align-items: center;
-            padding: 0.6rem 1.5rem;
+            padding: 0.5rem 1.5rem;
             border-radius: 9999px;
             font-weight: 800;
-            font-size: 1.15rem;
+            font-size: 1.2rem;
+            letter-spacing: 0.05em;
             text-transform: uppercase;
         }
         .badge-pass { background-color: var(--pass-bg); color: var(--pass-color); border: 1px solid var(--pass-color); }
         .badge-warning { background-color: var(--warn-bg); color: var(--warn-color); border: 1px solid var(--warn-color); }
         .badge-fail { background-color: var(--fail-bg); color: var(--fail-color); border: 1px solid var(--fail-color); }
 
-        .tier-grid {
+        .grid-tiers {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2.5rem;
         }
         .tier-card {
             background-color: var(--card-bg);
             border: 1px solid var(--card-border);
-            border-radius: 0.85rem;
+            border-radius: 0.75rem;
             padding: 1.5rem;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);
-            transition: transform 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+            position: relative;
         }
-        .tier-card:hover { transform: translateY(-2px); border-color: var(--accent-blue); }
-        .tier-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
-        .tier-title { font-size: 1.15rem; font-weight: 700; color: var(--text-primary); }
-        .tier-tag { font-size: 0.75rem; font-weight: 800; padding: 0.2rem 0.6rem; border-radius: 0.375rem; }
-        .tier-desc { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem; }
-        .metric-item { display: flex; justify-content: space-between; padding: 0.4rem 0; border-top: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem; }
-        .metric-item span:first-child { color: var(--text-secondary); }
-        .metric-item span:last-child { font-weight: 600; color: var(--text-primary); }
+        .tier-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 0.5rem;
+        }
+        .tier-title { font-size: 1.15rem; font-weight: 700; color: var(--accent-blue); }
+        .tag { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 0.375rem; font-size: 0.75rem; font-weight: 700; }
+        .tag-pass { background-color: var(--pass-bg); color: var(--pass-color); }
+        .tag-warning { background-color: var(--warn-bg); color: var(--warn-color); }
+        .tag-fail { background-color: var(--fail-bg); color: var(--fail-color); }
 
-        .section-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 1rem; color: var(--accent-blue); }
+        .tier-body { font-size: 0.9rem; color: var(--text-secondary); }
+        .tier-body p { margin-bottom: 0.4rem; }
+        .tier-body strong { color: var(--text-primary); }
+
+        .section-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 1rem; color: var(--accent-purple); }
         .box { background-color: var(--card-bg); border: 1px solid var(--card-border); border-radius: 0.75rem; padding: 1.25rem; margin-bottom: 2rem; }
         pre { background-color: rgba(0, 0, 0, 0.4); padding: 1rem; border-radius: 0.5rem; color: #38bdf8; font-family: monospace; font-size: 0.85rem; white-space: pre-wrap; }
         .btn-copy { background-color: #2563eb; color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 0.375rem; cursor: pointer; font-size: 0.8rem; margin-top: 0.5rem; }
@@ -98,105 +108,152 @@ META_HTML_TEMPLATE = """<!DOCTYPE html>
     <div class="container">
         <header class="header">
             <div class="title-group">
-                <h1>SimCert Project Validation Hub</h1>
-                <p>{{ report.project_name }} &bull; Multi-Tier Simulation Quality Certification</p>
+                <h1>SimCert Multi-Scale Quality Hub</h1>
+                <p>{{ report.project_name }} &bull; Comprehensive In Silico Quality Certification</p>
             </div>
             <div>
                 <span class="status-badge badge-{{ report.overall_status.lower() }}">
-                    OVERALL: {{ report.overall_status }}
+                    {{ report.overall_status }}
                 </span>
             </div>
         </header>
 
-        <h2 class="section-title">Computational Simulation Tiers</h2>
-        <div class="tier-grid">
-            <!-- 1. Molecular Dynamics (MDCheck) -->
+        <h2 class="section-title">Computational Tiers Certification Summary</h2>
+        <div class="grid-tiers">
+            <!-- Tier 1: MD -->
             <div class="tier-card">
                 <div class="tier-header">
-                    <div class="tier-title">Molecular Dynamics</div>
-                    <span class="tier-tag badge-{{ report.md_report.overall_status.lower() if report.md_report else 'warning' }}">
-                        {{ report.md_report.overall_status if report.md_report else 'NOT RUN' }}
-                    </span>
+                    <div class="tier-title">Molecular Dynamics (MDCheck)</div>
+                    {% if report.md_report %}
+                    <span class="tag tag-{{ report.md_report.overall_status.lower() }}">{{ report.md_report.overall_status }}</span>
+                    {% else %}
+                    <span class="tag" style="background-color: #334155; color: #94a3b8;">SKIPPED</span>
+                    {% endif %}
                 </div>
-                <div class="tier-desc">Toolkit: <strong>MDCheck v1.0.0</strong></div>
-                {% if report.md_report %}
-                <div class="metric-item"><span>Observables</span><span>{{ report.md_report.n_observables }} audited</span></div>
-                <div class="metric-item"><span>Equilibration</span><span>t_eq detected</span></div>
-                <div class="metric-item"><span>Sampling (N_eff)</span><span>Certified</span></div>
-                {% else %}
-                <div class="metric-item"><span>Status</span><span>No MD runs in project</span></div>
-                {% endif %}
+                <div class="tier-body">
+                    {% if report.md_report %}
+                    <p><strong>Observables Evaluated:</strong> {{ report.md_report.key_metrics.n_observables_evaluated }}</p>
+                    <p><strong>Min Sample Size:</strong> {{ "%.1f"|format(report.md_report.key_metrics.min_effective_sample_size) }}</p>
+                    <p><strong>Assessment:</strong> {{ report.md_report.score_summary }}</p>
+                    <p><a href="md/report.html" style="color: var(--accent-blue); text-decoration: underline;">View Detailed MD Report &rarr;</a></p>
+                    {% else %}
+                    <p>No molecular dynamics trajectory evaluated.</p>
+                    {% endif %}
+                </div>
             </div>
 
-            <!-- 2. Molecular Docking (DockCert) -->
+            <!-- Tier 2: Docking -->
             <div class="tier-card">
                 <div class="tier-header">
-                    <div class="tier-title">Molecular Docking</div>
-                    <span class="tier-tag badge-{{ report.dock_report.overall_status.lower() if report.dock_report else 'warning' }}">
-                        {{ report.dock_report.overall_status if report.dock_report else 'NOT RUN' }}
-                    </span>
+                    <div class="tier-title">Molecular Docking (DockCert)</div>
+                    {% if report.dock_report %}
+                    <span class="tag tag-{{ report.dock_report.overall_status.lower() }}">{{ report.dock_report.overall_status }}</span>
+                    {% else %}
+                    <span class="tag" style="background-color: #334155; color: #94a3b8;">SKIPPED</span>
+                    {% endif %}
                 </div>
-                <div class="tier-desc">Toolkit: <strong>DockCert v1.0.0</strong></div>
-                {% if report.dock_report %}
-                <div class="metric-item"><span>BEDROC (a=20)</span><span>{{ "%.3f"|format(report.dock_report.enrichment.bedroc_alpha_20) if report.dock_report.enrichment else 'N/A' }}</span></div>
-                <div class="metric-item"><span>ROC-AUC</span><span>{{ "%.3f"|format(report.dock_report.enrichment.roc_auc) if report.dock_report.enrichment else 'N/A' }}</span></div>
-                <div class="metric-item"><span>Redocking RMSD</span><span>{{ report.dock_report.redocking.status if report.dock_report.redocking else 'N/A' }}</span></div>
-                {% else %}
-                <div class="metric-item"><span>Status</span><span>No Docking runs in project</span></div>
-                {% endif %}
+                <div class="tier-body">
+                    {% if report.dock_report and report.dock_report.enrichment_metrics %}
+                    <p><strong>BEDROC (&alpha;=20.0):</strong> {{ "%.3f"|format(report.dock_report.enrichment_metrics['bedroc_20'].value if 'bedroc_20' in report.dock_report.enrichment_metrics else 0.0) }}</p>
+                    <p><strong>ROC-AUC:</strong> {{ "%.3f"|format(report.dock_report.enrichment_metrics['roc_auc'].value if 'roc_auc' in report.dock_report.enrichment_metrics else 0.0) }}</p>
+                    <p><strong>Assessment:</strong> {{ report.dock_report.validation_score }}</p>
+                    <p><a href="docking/report.html" style="color: var(--accent-blue); text-decoration: underline;">View Detailed Docking Report &rarr;</a></p>
+                    {% elif report.dock_report %}
+                    <p><strong>Assessment:</strong> {{ report.dock_report.validation_score }}</p>
+                    <p><a href="docking/report.html" style="color: var(--accent-blue); text-decoration: underline;">View Detailed Docking Report &rarr;</a></p>
+                    {% else %}
+                    <p>No docking or virtual screening benchmark evaluated.</p>
+                    {% endif %}
+                </div>
             </div>
 
-            <!-- 3. Quantum Chemistry (QMCert) -->
+            <!-- Tier 3: QM -->
             <div class="tier-card">
                 <div class="tier-header">
-                    <div class="tier-title">Quantum Chemistry</div>
-                    <span class="tier-tag badge-{{ report.qm_report.overall_status.lower() if report.qm_report else 'warning' }}">
-                        {{ report.qm_report.overall_status if report.qm_report else 'NOT RUN' }}
-                    </span>
+                    <div class="tier-title">Quantum Chemistry (QMCert)</div>
+                    {% if report.qm_report %}
+                    <span class="tag tag-{{ report.qm_report.overall_status.lower() }}">{{ report.qm_report.overall_status }}</span>
+                    {% else %}
+                    <span class="tag" style="background-color: #334155; color: #94a3b8;">SKIPPED</span>
+                    {% endif %}
                 </div>
-                <div class="tier-desc">Toolkit: <strong>QMCert v1.0.0</strong></div>
-                {% if report.qm_report %}
-                <div class="metric-item"><span>Stationary Point</span><span>{{ report.qm_report.frequency_result.point_type if report.qm_report.frequency_result else 'Certified' }}</span></div>
-                <div class="metric-item"><span>SCF Convergence</span><span>{{ report.qm_report.scf_result.status if report.qm_report.scf_result else 'PASS' }}</span></div>
-                <div class="metric-item"><span>Spin Contamination</span><span>{{ report.qm_report.spin_result.status if report.qm_report.spin_result else 'PASS' }}</span></div>
-                {% else %}
-                <div class="metric-item"><span>Status</span><span>No QM runs in project</span></div>
-                {% endif %}
+                <div class="tier-body">
+                    {% if report.qm_report %}
+                    <p><strong>Engine / Theory:</strong> {{ report.qm_report.metadata.get('engine', 'QM') }} / {{ report.qm_report.metadata.get('functional', 'DFT') }}</p>
+                    {% if report.qm_report.frequency_result %}
+                    <p><strong>Stationary Point:</strong> {{ report.qm_report.frequency_result.stationary_point_type }} ({{ report.qm_report.frequency_result.n_imaginary }} imag freqs)</p>
+                    {% else %}
+                    <p><strong>Stationary Point:</strong> Evaluated</p>
+                    {% endif %}
+                    <p><strong>Assessment:</strong> {{ report.qm_report.validation_score }}</p>
+                    <p><a href="qm/report.html" style="color: var(--accent-blue); text-decoration: underline;">View Detailed QM Report &rarr;</a></p>
+                    {% else %}
+                    <p>No electronic structure or DFT calculation evaluated.</p>
+                    {% endif %}
+                </div>
             </div>
 
-            <!-- 4. Adsorption / MOFs (AdsorpQC) -->
+            <!-- Tier 4: Adsorption -->
             <div class="tier-card">
                 <div class="tier-header">
-                    <div class="tier-title">Adsorption & GCMC</div>
-                    <span class="tier-tag badge-{{ report.adsorp_report.overall_status.lower() if report.adsorp_report else 'warning' }}">
-                        {{ report.adsorp_report.overall_status if report.adsorp_report else 'NOT RUN' }}
-                    </span>
+                    <div class="tier-title">Adsorption & MOFs (AdsorpQC)</div>
+                    {% if report.adsorp_report %}
+                    <span class="tag tag-{{ report.adsorp_report.overall_status.lower() }}">{{ report.adsorp_report.overall_status }}</span>
+                    {% else %}
+                    <span class="tag" style="background-color: #334155; color: #94a3b8;">SKIPPED</span>
+                    {% endif %}
                 </div>
-                <div class="tier-desc">Toolkit: <strong>AdsorpQC v1.0.0</strong></div>
-                {% if report.adsorp_report %}
-                <div class="metric-item"><span>GCMC Burn-in</span><span>{{ report.adsorp_report.burnin_result.status if report.adsorp_report.burnin_result else 'Certified' }}</span></div>
-                <div class="metric-item"><span>Optimal Isotherm</span><span>{{ report.adsorp_report.isotherm_fits.best_model_name if report.adsorp_report.isotherm_fits else 'Fitted' }}</span></div>
-                <div class="metric-item"><span>Loading Drift</span><span>{{ "%.2f"|format(report.adsorp_report.burnin_result.loading_drift_pct) if report.adsorp_report.burnin_result else '0.0%' }}</span></div>
-                {% else %}
-                <div class="metric-item"><span>Status</span><span>No Adsorption runs in project</span></div>
-                {% endif %}
+                <div class="tier-body">
+                    {% if report.adsorp_report %}
+                    <p><strong>Framework:</strong> {{ report.adsorp_report.metadata.get('framework', 'Porous Material') }}</p>
+                    {% if report.adsorp_report.isotherm_fit %}
+                    <p><strong>Best Isotherm:</strong> {{ report.adsorp_report.isotherm_fit.best_model_name }}</p>
+                    {% endif %}
+                    <p><strong>Assessment:</strong> {{ report.adsorp_report.validation_score }}</p>
+                    <p><a href="adsorption/report.html" style="color: var(--accent-blue); text-decoration: underline;">View Detailed Adsorption Report &rarr;</a></p>
+                    {% else %}
+                    <p>No adsorption or GCMC simulation evaluated.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Tier 5: AlphaFold / ESMFold -->
+            <div class="tier-card">
+                <div class="tier-header">
+                    <div class="tier-title">AlphaFold / Structures (AlphaCert)</div>
+                    {% if report.alpha_report %}
+                    <span class="tag tag-{{ report.alpha_report.overall_status.lower() }}">{{ report.alpha_report.overall_status }}</span>
+                    {% else %}
+                    <span class="tag" style="background-color: #334155; color: #94a3b8;">SKIPPED</span>
+                    {% endif %}
+                </div>
+                <div class="tier-body">
+                    {% if report.alpha_report %}
+                    <p><strong>Target & Engine:</strong> {{ report.alpha_report.metadata.get('name', 'Protein') }} ({{ report.alpha_report.metadata.get('engine', 'AlphaFold2') }})</p>
+                    <p><strong>Mean pLDDT:</strong> {{ "%.1f"|format(report.alpha_report.plddt_result.mean_plddt) }} / 100</p>
+                    <p><strong>Assessment:</strong> {{ report.alpha_report.validation_score }}</p>
+                    <p><a href="alpha/report.html" style="color: var(--accent-blue); text-decoration: underline;">View Detailed Structure Report &rarr;</a></p>
+                    {% else %}
+                    <p>No predicted protein structure evaluated.</p>
+                    {% endif %}
+                </div>
             </div>
         </div>
 
-        <h2 class="section-title">Consolidated Manuscript Methods Text</h2>
+        <h2 class="section-title">Consolidated Manuscript Methods Section</h2>
         <div class="box">
             <pre id="methodsSnippet">{{ report.consolidated_methods }}</pre>
-            <button class="btn-copy" onclick="copyToClipboard('methodsSnippet')">Copy All Methods Text</button>
+            <button class="btn-copy" onclick="copyToClipboard('methodsSnippet')">Copy Consolidated Methods</button>
         </div>
 
-        <h2 class="section-title">Consolidated BibTeX References</h2>
+        <h2 class="section-title">Consolidated BibTeX Citations</h2>
         <div class="box">
             <pre id="bibSnippet">{{ report.consolidated_bibtex }}</pre>
-            <button class="btn-copy" onclick="copyToClipboard('bibSnippet')">Copy BibTeX Citations</button>
+            <button class="btn-copy" onclick="copyToClipboard('bibSnippet')">Copy Consolidated BibTeX</button>
         </div>
 
         <footer>
-            Generated automatically by <strong>SimCert v1.0.0</strong> &bull; Unified Scientific Simulation Quality-Control Meta-Framework &bull; Monreal-Hernández, 2026.
+            Generated automatically by <strong>SimCert v1.1.0</strong> &bull; Unified Scientific Simulation Quality Meta-Framework &bull; Monreal-Hernández, 2026.
         </footer>
     </div>
 
@@ -216,7 +273,10 @@ META_HTML_TEMPLATE = """<!DOCTYPE html>
 
 
 def generate_simcert_meta_report(report: SimCertProjectReport, output_path: str) -> str:
-    template = jinja2.Template(META_HTML_TEMPLATE)
+    """
+    Renders consolidated multi-scale project summary HTML.
+    """
+    template = jinja2.Template(HTML_TEMPLATE)
     rendered = template.render(report=report)
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(rendered)
