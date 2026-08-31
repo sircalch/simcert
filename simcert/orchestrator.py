@@ -11,6 +11,7 @@ from dockcert.core.scoring import DockingValidationReport
 from qmcert.core.scoring import QMCertValidationReport
 from adsorpqc.core.scoring import AdsorptionValidationReport
 from alphacert.core.scoring import AlphaFoldValidationReport
+from fepcert.core.scoring import FEPValidationReport
 
 
 @dataclass
@@ -22,6 +23,7 @@ class SimCertProjectReport:
     qm_report: Optional[QMCertValidationReport]
     adsorp_report: Optional[AdsorptionValidationReport]
     alpha_report: Optional[AlphaFoldValidationReport]
+    fep_report: Optional[FEPValidationReport]
     consolidated_methods: str
     consolidated_bibtex: str
 
@@ -35,7 +37,8 @@ def run_multiscale_audit(
     dock_report: Optional[DockingValidationReport] = None,
     qm_report: Optional[QMCertValidationReport] = None,
     adsorp_report: Optional[AdsorptionValidationReport] = None,
-    alpha_report: Optional[AlphaFoldValidationReport] = None
+    alpha_report: Optional[AlphaFoldValidationReport] = None,
+    fep_report: Optional[FEPValidationReport] = None
 ) -> SimCertProjectReport:
     """
     Consolidates validation metrics across computational tiers into a single executive report.
@@ -49,6 +52,7 @@ def run_multiscale_audit(
     qm_report : QMCertValidationReport, optional
     adsorp_report : AdsorptionValidationReport, optional
     alpha_report : AlphaFoldValidationReport, optional
+    fep_report : FEPValidationReport, optional
 
     Returns
     -------
@@ -129,12 +133,26 @@ def run_multiscale_audit(
   url = {https://github.com/amonreal/alphacert}
 }""")
 
+    if fep_report:
+        statuses.append(fep_report.overall_status)
+        methods_parts.append(
+            f"Alchemical free energy calculations, phase space overlap matrices, and thermodynamic cycle closures were certified using FEPCert v1.0.0 (Monreal-Hernández, 2026). Status: {fep_report.overall_status}."
+        )
+        bib_parts.append("""@software{monreal2026fepcert,
+  author = {Monreal-Hern\\'andez, Andre},
+  title = {{FEPCert: An Open-Source Toolkit for Quality-Control, Phase Space Overlap, and Thermodynamic Cycle Closure Certification of Alchemical Free Energy Simulations}},
+  year = {2026},
+  version = {1.0.0},
+  publisher = {Zenodo},
+  url = {https://github.com/amonreal/fepcert}
+}""")
+
     # Umbrella SimCert citation
     bib_parts.append("""@software{monreal2026simcert,
   author = {Monreal-Hern\\'andez, Andre},
   title = {{SimCert: A Unified Scientific Simulation Quality-Control and Reproducibility Meta-Framework}},
   year = {2026},
-  version = {1.1.0},
+  version = {1.2.0},
   publisher = {Zenodo},
   url = {https://github.com/amonreal/simcert}
 }""")
@@ -157,6 +175,7 @@ def run_multiscale_audit(
         qm_report=qm_report,
         adsorp_report=adsorp_report,
         alpha_report=alpha_report,
+        fep_report=fep_report,
         consolidated_methods=consolidated_methods,
         consolidated_bibtex=consolidated_bibtex
     )

@@ -217,7 +217,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 </div>
             </div>
 
-            <!-- Tier 5: AlphaFold / ESMFold -->
+            <!-- Tier 5: AlphaFold / Structures -->
             <div class="tier-card">
                 <div class="tier-header">
                     <div class="tier-title">AlphaFold / Structures (AlphaCert)</div>
@@ -238,6 +238,31 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                     {% endif %}
                 </div>
             </div>
+
+            <!-- Tier 6: Free Energy & FEP -->
+            <div class="tier-card">
+                <div class="tier-header">
+                    <div class="tier-title">Free Energy & FEP (FEPCert)</div>
+                    {% if report.fep_report %}
+                    <span class="tag tag-{{ report.fep_report.overall_status.lower() }}">{{ report.fep_report.overall_status }}</span>
+                    {% else %}
+                    <span class="tag" style="background-color: #334155; color: #94a3b8;">SKIPPED</span>
+                    {% endif %}
+                </div>
+                <div class="tier-body">
+                    {% if report.fep_report %}
+                    <p><strong>Transformation:</strong> {{ report.fep_report.metadata.get('transformation', 'LigA -> LigB') }}</p>
+                    <p><strong>Calculated &Delta;G:</strong> {{ "%.2f"|format(report.fep_report.free_energy.delta_g) }} &plusmn; {{ "%.2f"|format(report.fep_report.free_energy.delta_g_error) }} {{ report.fep_report.free_energy.unit }}</p>
+                    {% if report.fep_report.overlap_result %}
+                    <p><strong>Min Overlap &Pi;:</strong> {{ "%.1f"|format(report.fep_report.overlap_result.min_adjacent_overlap*100) }}%</p>
+                    {% endif %}
+                    <p><strong>Assessment:</strong> {{ report.fep_report.validation_score }}</p>
+                    <p><a href="fep/report.html" style="color: var(--accent-blue); text-decoration: underline;">View Detailed FEP Report &rarr;</a></p>
+                    {% else %}
+                    <p>No alchemical free energy calculation evaluated.</p>
+                    {% endif %}
+                </div>
+            </div>
         </div>
 
         <h2 class="section-title">Consolidated Manuscript Methods Section</h2>
@@ -253,7 +278,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         </div>
 
         <footer>
-            Generated automatically by <strong>SimCert v1.1.0</strong> &bull; Unified Scientific Simulation Quality Meta-Framework &bull; Monreal-Hernández, 2026.
+            Generated automatically by <strong>SimCert v1.2.0</strong> &bull; Unified Scientific Simulation Quality Meta-Framework &bull; Monreal-Hernández, 2026.
         </footer>
     </div>
 
