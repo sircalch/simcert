@@ -14,6 +14,7 @@ from alphacert.core.scoring import AlphaFoldValidationReport
 from fepcert.core.scoring import FEPValidationReport
 from qsarcert.core.scoring import QSARValidationReport
 from catcert.core.scoring import SlabQualityReport
+from nebcert.core.scoring import ReactionPathwayReport
 
 
 @dataclass
@@ -28,6 +29,7 @@ class SimCertProjectReport:
     fep_report: Optional[FEPValidationReport]
     qsar_report: Optional[QSARValidationReport]
     cat_report: Optional[SlabQualityReport]
+    neb_report: Optional[ReactionPathwayReport]
     consolidated_methods: str
     consolidated_bibtex: str
 
@@ -44,10 +46,11 @@ def run_multiscale_audit(
     alpha_report: Optional[AlphaFoldValidationReport] = None,
     fep_report: Optional[FEPValidationReport] = None,
     qsar_report: Optional[QSARValidationReport] = None,
-    cat_report: Optional[SlabQualityReport] = None
+    cat_report: Optional[SlabQualityReport] = None,
+    neb_report: Optional[ReactionPathwayReport] = None
 ) -> SimCertProjectReport:
     """
-    Consolidates validation metrics across 8 computational tiers into a single executive report.
+    Consolidates validation metrics across 9 computational tiers into a single executive report.
     """
     statuses = []
     methods_parts = []
@@ -165,12 +168,26 @@ def run_multiscale_audit(
   url = {https://github.com/amonreal/catcert}
 }""")
 
+    if neb_report:
+        statuses.append(neb_report.overall_status)
+        methods_parts.append(
+            f"Nudged elastic band reaction pathways, transition states, Eyring rate constants, and quantum tunneling corrections were certified using NEBCert v1.0.0 (Monreal-Hernández, 2026). Status: {neb_report.overall_status}."
+        )
+        bib_parts.append("""@software{monreal2026nebcert,
+  author = {Monreal-Hern\\'andez, Andre},
+  title = {{NEBCert: Automated Quality-Control, Transition State Verification, Nudged Elastic Band (NEB), Quantum Tunneling, and Reaction Kinetics Certification}},
+  year = {2026},
+  version = {1.0.0},
+  publisher = {Zenodo},
+  url = {https://github.com/amonreal/nebcert}
+}""")
+
     # Umbrella SimCert citation
     bib_parts.append("""@software{monreal2026simcert,
   author = {Monreal-Hern\\'andez, Andre},
   title = {{SimCert: A Unified Scientific Simulation Quality-Control and Reproducibility Meta-Framework}},
   year = {2026},
-  version = {1.4.0},
+  version = {1.5.0},
   publisher = {Zenodo},
   url = {https://github.com/amonreal/simcert}
 }""")
@@ -196,6 +213,7 @@ def run_multiscale_audit(
         fep_report=fep_report,
         qsar_report=qsar_report,
         cat_report=cat_report,
+        neb_report=neb_report,
         consolidated_methods=consolidated_methods,
         consolidated_bibtex=consolidated_bibtex
     )

@@ -16,6 +16,11 @@ from fepcert.core.scoring import assess_fep_quality
 from qsarcert.core.scoring import assess_qsar_quality
 from catcert.core.scoring import assess_slab_quality
 from catcert.core.surface_energy import calculate_surface_energy_convergence
+from nebcert.core.scoring import assess_reaction_pathway_quality
+from nebcert.core.neb_profile import calculate_neb_profile_analysis
+from nebcert.core.ts_frequency import verify_ts_frequency_and_irc
+from nebcert.core.tst_kinetics import calculate_eyring_tst_rates
+from nebcert.core.tunneling import calculate_quantum_tunneling_corrections
 
 from simcert.orchestrator import run_multiscale_audit
 from simcert.meta_report import generate_simcert_meta_report
@@ -90,8 +95,24 @@ def test_multiscale_orchestrator():
         surface_energy_res=cat_se
     )
 
+    # 9. NEB / Kinetics
+    neb_calc = calculate_neb_profile_analysis(
+        energies_ev=[0.0, 0.05, 0.15, 0.23, 0.10, -0.25, -0.62],
+        coordinates_s_ang=[0.0, 0.4, 0.8, 1.2, 1.6, 2.0, 2.4]
+    )
+    neb_ts = verify_ts_frequency_and_irc([-1250.0, 120.0, 300.0], irc_confirmed=True)
+    neb_tst = calculate_eyring_tst_rates(neb_calc.e_forward_barrier_ev)
+    neb_tun = calculate_quantum_tunneling_corrections(1250.0, neb_calc.e_forward_barrier_ev, neb_calc.e_reverse_barrier_ev)
+    neb_rep = assess_reaction_pathway_quality(
+        metadata={"reaction": "CH4 + OH -> CH3 + H2O", "functional": "wB97X-D3", "software": "ORCA"},
+        neb_res=neb_calc,
+        ts_freq_res=neb_ts,
+        tst_res=neb_tst,
+        tunneling_res=neb_tun
+    )
+
     meta_rep = run_multiscale_audit(
-        project_name="Complete 8-Tier Molecular Investigation",
+        project_name="Complete 9-Tier Molecular Investigation",
         md_report=md_rep,
         dock_report=dock_rep,
         qm_report=qm_rep,
@@ -99,7 +120,8 @@ def test_multiscale_orchestrator():
         alpha_report=alpha_rep,
         fep_report=fep_rep,
         qsar_report=qsar_rep,
-        cat_report=cat_rep
+        cat_report=cat_rep,
+        neb_report=neb_rep
     )
 
     assert meta_rep.overall_status in ["PASS", "WARNING"]
@@ -111,6 +133,7 @@ def test_multiscale_orchestrator():
     assert "FEPCert" in meta_rep.consolidated_methods
     assert "QSARCert" in meta_rep.consolidated_methods
     assert "CatCert" in meta_rep.consolidated_methods
+    assert "NEBCert" in meta_rep.consolidated_methods
 
     with tempfile.TemporaryDirectory() as tmpdir:
         out_html = os.path.join(tmpdir, "simcert_project_summary.html")

@@ -16,6 +16,7 @@ import alphacert.cli
 import fepcert.cli
 import qsarcert.cli
 import catcert.cli
+import nebcert.cli
 
 from mdcheck.core.scoring import assess_trajectory_quality
 from dockcert.core.scoring import assess_docking_quality
@@ -26,7 +27,11 @@ from fepcert.core.scoring import assess_fep_quality
 from qsarcert.core.scoring import assess_qsar_quality
 from catcert.core.scoring import assess_slab_quality
 from catcert.core.surface_energy import calculate_surface_energy_convergence
-from catcert.core.vacuum_potential import calculate_vacuum_potential_profile
+from nebcert.core.scoring import assess_reaction_pathway_quality
+from nebcert.core.neb_profile import calculate_neb_profile_analysis
+from nebcert.core.ts_frequency import verify_ts_frequency_and_irc
+from nebcert.core.tst_kinetics import calculate_eyring_tst_rates
+from nebcert.core.tunneling import calculate_quantum_tunneling_corrections
 
 from simcert.orchestrator import run_multiscale_audit
 from simcert.meta_report import generate_simcert_meta_report
@@ -49,10 +54,10 @@ def print_banner():
 
 def run_demo_all(output_dir: str = "simcert_full_demo_output"):
     """
-    Executes a comprehensive multi-scale project demonstration certifying all 8 tiers
-    (Molecular Dynamics, Docking, Quantum Chemistry, Adsorption, AlphaFold, Free Energy / FEP, QSAR / ML, and Catalysis / Surfaces).
+    Executes a comprehensive multi-scale project demonstration certifying all 9 tiers
+    (Molecular Dynamics, Docking, Quantum Chemistry, Adsorption, AlphaFold, Free Energy / FEP, QSAR / ML, Catalysis, and NEB / Kinetics).
     """
-    print(f"\n[SimCert] Running Full-Suite Multi-Scale Demonstration (8 Computational Tiers)...")
+    print(f"\n[SimCert] Running Full-Suite Multi-Scale Demonstration (9 Computational Tiers)...")
     os.makedirs(output_dir, exist_ok=True)
     
     # 1. Run MD demo
@@ -94,6 +99,11 @@ def run_demo_all(output_dir: str = "simcert_full_demo_output"):
     cat_dir = os.path.join(output_dir, "catalysis")
     print("\n--- [Tier 8: Heterogeneous Catalysis & Surfaces (CatCert)] ---")
     catcert.cli.run_demo(output_dir=cat_dir)
+
+    # 9. Run NEBCert demo
+    neb_dir = os.path.join(output_dir, "kinetics")
+    print("\n--- [Tier 9: Reaction Pathways & NEB Kinetics (NEBCert)] ---")
+    nebcert.cli.run_demo(output_dir=neb_dir)
     
     # Build consolidated project report
     print("\n--- [Generating Consolidated SimCert Project Summary Dashboard] ---")
@@ -158,8 +168,24 @@ def run_demo_all(output_dir: str = "simcert_full_demo_output"):
         surface_energy_res=cat_se
     )
 
+    # NEB / Kinetics
+    neb_calc = calculate_neb_profile_analysis(
+        energies_ev=[0.0, 0.05, 0.15, 0.23, 0.10, -0.25, -0.62],
+        coordinates_s_ang=[0.0, 0.4, 0.8, 1.2, 1.6, 2.0, 2.4]
+    )
+    neb_ts = verify_ts_frequency_and_irc([-1250.0, 120.0, 300.0], irc_confirmed=True)
+    neb_tst = calculate_eyring_tst_rates(neb_calc.e_forward_barrier_ev)
+    neb_tun = calculate_quantum_tunneling_corrections(1250.0, neb_calc.e_forward_barrier_ev, neb_calc.e_reverse_barrier_ev)
+    neb_rep = assess_reaction_pathway_quality(
+        metadata={"reaction": "CH4 + OH -> CH3 + H2O", "functional": "wB97X-D3", "software": "ORCA"},
+        neb_res=neb_calc,
+        ts_freq_res=neb_ts,
+        tst_res=neb_tst,
+        tunneling_res=neb_tun
+    )
+
     meta_rep = run_multiscale_audit(
-        project_name="Multi-Scale Drug Discovery & Nanoporous Delivery Project",
+        project_name="Multi-Scale Chemical & Molecular Discovery Project",
         md_report=md_rep,
         dock_report=dock_rep,
         qm_report=qm_rep,
@@ -167,7 +193,8 @@ def run_demo_all(output_dir: str = "simcert_full_demo_output"):
         alpha_report=alpha_rep,
         fep_report=fep_rep,
         qsar_report=qsar_rep,
-        cat_report=cat_rep
+        cat_report=cat_rep,
+        neb_report=neb_rep
     )
     
     meta_html = os.path.join(output_dir, "simcert_project_summary.html")
@@ -184,6 +211,7 @@ def run_demo_all(output_dir: str = "simcert_full_demo_output"):
     print(f"  * Tier 6 (Alchemical Free E.)  : PASS (Report in {fep_dir}/)")
     print(f"  * Tier 7 (QSAR / Machine Learn): PASS (Report in {qsar_dir}/)")
     print(f"  * Tier 8 (Heterogeneous Cat.)  : PASS (Report in {cat_dir}/)")
+    print(f"  * Tier 9 (Reaction NEB Kinetics: PASS (Report in {neb_dir}/)")
     print("="*75)
     print(f"\nProject Hub Ready at: {os.path.abspath(meta_html)}\n")
 
@@ -193,13 +221,13 @@ def print_citation():
   author = {Monreal-Hern\\'andez, Andre},
   title = {{SimCert: A Unified Scientific Simulation Quality-Control and Reproducibility Meta-Framework}},
   year = {2026},
-  version = {1.4.0},
+  version = {1.5.0},
   publisher = {Zenodo},
   url = {https://github.com/amonreal/simcert}
 }"""
     print("\nIf you use the SimCert umbrella meta-framework in your research, please cite:\n")
     print("APA Style:")
-    print("Monreal-Hernández, A. (2026). SimCert: A Unified Scientific Simulation Quality-Control and Reproducibility Meta-Framework (v1.4.0). Zenodo. https://github.com/amonreal/simcert\n")
+    print("Monreal-Hernández, A. (2026). SimCert: A Unified Scientific Simulation Quality-Control and Reproducibility Meta-Framework (v1.5.0). Zenodo. https://github.com/amonreal/simcert\n")
     print("BibTeX:")
     print(bib)
     print()
@@ -223,8 +251,9 @@ def main():
     subparsers.add_parser("fep", help="Delegate to FEPCert (Alchemical Free Energy & Cycle Closure Certification)")
     subparsers.add_parser("qsar", help="Delegate to QSARCert (QSAR & Molecular Machine Learning Certification)")
     subparsers.add_parser("cat", help="Delegate to CatCert (Heterogeneous Catalysis & DFT Slab Certification)")
+    subparsers.add_parser("neb", help="Delegate to NEBCert (Reaction Pathways, NEB & Chemical Kinetics Certification)")
     
-    demo_p = subparsers.add_parser("demo-all", help="Run full multi-scale demonstration benchmark (8 tiers)")
+    demo_p = subparsers.add_parser("demo-all", help="Run full multi-scale demonstration benchmark (9 tiers)")
     demo_p.add_argument("-o", "--output", default="simcert_full_demo_output", help="Output directory")
     
     subparsers.add_parser("cite", help="Display consolidated citations")
@@ -260,6 +289,9 @@ def main():
     elif first_arg == "cat":
         sys.argv = [sys.argv[0]] + sys.argv[2:]
         catcert.cli.main()
+    elif first_arg == "neb":
+        sys.argv = [sys.argv[0]] + sys.argv[2:]
+        nebcert.cli.main()
     elif first_arg == "demo-all":
         print_banner()
         out = "simcert_full_demo_output"

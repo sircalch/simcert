@@ -6,13 +6,13 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1234570.svg)](https://doi.org/10.5281/zenodo.1234570)
 
-> **Unified Quality-Control, Structure Validation, and Reproducibility Meta-Framework for Molecular Simulations & AI Models (MD, Docking, QM, Adsorption, AlphaFold, FEP, QSAR, Catalysis).**
+> **Unified Quality-Control, Structure Validation, and Reproducibility Meta-Framework for Molecular Simulations & AI Models (MD, Docking, QM, Adsorption, AlphaFold, FEP, QSAR, Catalysis, NEB / Kinetics).**
 
 ---
 
 ## Overview
 
-**SimCert** is a high-level scientific umbrella meta-framework that connects, standardizes, and unifies automated quality control, convergence certification, and reproducibility reporting across **eight distinct computational simulation and modeling domains**:
+**SimCert** is a high-level scientific umbrella meta-framework that connects, standardizes, and unifies automated quality control, convergence certification, and reproducibility reporting across **nine distinct computational simulation and modeling domains**:
 
 ```
                                                ┌─────────────────────────────────────────┐
@@ -20,19 +20,19 @@
                                                │    (Umbrella Project Meta-Dashboard)    │
                                                └─────────────────────────────────────────┘
                                                                     │
-         ┌───────────────┬───────────────┬───────────────┬──────────┴────┬───────────────┬───────────────┬───────────────┬───────────────┐
-         │               │               │               │               │               │               │               │               │
-         ▼               ▼               ▼               ▼               ▼               ▼               ▼               ▼               ▼
-   ┌───────────┐   ┌───────────┐   ┌───────────┐   ┌───────────┐   ┌───────────┐   ┌───────────┐   ┌───────────┐   ┌───────────┐   ┌───────────┐
-   │  MDCheck  │   │ DockCert  │   │  QMCert   │   │ AdsorpQC  │   │ AlphaCert │   │  FEPCert  │   │ QSARCert  │   │  CatCert  │   │    ...    │
-   │  Tier 1   │   │  Tier 2   │   │  Tier 3   │   │  Tier 4   │   │  Tier 5   │   │  Tier 6   │   │  Tier 7   │   │  Tier 8   │   │           │
-   │    MD     │   │  Docking  │   │    DFT    │   │   GCMC    │   │ AlphaFold │   │ FEP / TI  │   │ QSAR / ML │   │ Catalysis │   │           │
-   └───────────┘   └───────────┘   └───────────┘   └───────────┘   └───────────┘   └───────────┘   └───────────┘   └───────────┘   └───────────┘
+         ┌───────────────┬───────────────┬───────────────┬──────────┴────┬───────────────┬───────────────┬───────────────┬───────────────┬───────────────┐
+         │               │               │               │               │               │               │               │               │               │
+         ▼               ▼               ▼               ▼               ▼               ▼               ▼               ▼               ▼               ▼
+   ┌───────────┐   ┌───────────┐   ┌───────────┐   ┌───────────┐   ┌───────────┐   ┌───────────┐   ┌───────────┐   ┌───────────┐   ┌───────────┐   ┌───────────┐
+   │  MDCheck  │   │ DockCert  │   │  QMCert   │   │ AdsorpQC  │   │ AlphaCert │   │  FEPCert  │   │ QSARCert  │   │  CatCert  │   │  NEBCert  │   │    ...    │
+   │  Tier 1   │   │  Tier 2   │   │  Tier 3   │   │  Tier 4   │   │  Tier 5   │   │  Tier 6   │   │  Tier 7   │   │  Tier 8   │   │  Tier 9   │   │           │
+   │    MD     │   │  Docking  │   │    DFT    │   │   GCMC    │   │ AlphaFold │   │ FEP / TI  │   │ QSAR / ML │   │ Catalysis │   │ Kinetics  │   │           │
+   └───────────┘   └───────────┘   └───────────┘   └───────────┘   └───────────┘   └───────────┘   └───────────┘   └───────────┘   └───────────┘   └───────────┘
 ```
 
 ---
 
-## The 8 Computational Tiers
+## The 9 Computational Tiers
 
 1. **Tier 1: Molecular Dynamics (`mdcheck`)**
    - Autocorrelation time ($\tau_{\text{int}}$), effective sample size ($N_{\text{eff}}$), Chodera automated equilibration ($t_{\text{eq}}$), Geweke diagnostic, linear drift, multi-replica consistency ($R_1, R_2, R_3$).
@@ -50,6 +50,8 @@
    - OECD Validation Principles, Hat matrix Applicability Domain ($h^* = \frac{3(p+1)}{n}$) and Williams plot, Tropsha-Golbraikh criteria, Y-randomization ($cR^2_p > 0.50$), train/test split leakage detection.
 8. **Tier 8: Heterogeneous Catalysis & Surfaces (`catcert`)**
    - Surface energy ($\gamma$) layer convergence, Fiorentini-Methfessel asymptotic regression, vacuum thickness and potential flatness $\bar{V}(z)$, physical work function ($\Phi$), dipole layer step ($|\Delta \Phi|$), and $E_{\text{ads}}$ dispersion audit.
+9. **Tier 9: Reaction Pathways & NEB Kinetics (`nebcert`)**
+   - Nudged Elastic Band (NEB / CI-NEB) cubic spline MEP interpolation, Climbing Image residual force audit ($|F_\parallel| \le 0.05\text{ eV/\AA}$), transition state 1st-order saddle point imaginary frequency verification, Eyring TST rate constants $k(T)$, Arrhenius fitting, and asymmetric Eckart / Wigner quantum tunneling corrections.
 
 ---
 
@@ -64,7 +66,7 @@ pip install simcert
 ## Quickstart (CLI)
 
 ```bash
-# 1. Run full 8-tier multi-scale benchmark demonstration
+# 1. Run full 9-tier multi-scale benchmark demonstration
 simcert demo-all -o full_project_audit/
 
 # 2. Delegate to any individual tier
@@ -76,6 +78,7 @@ simcert alpha assess -i model.pdb --pae model_pae.json -o alpha_report/
 simcert fep assess -d gromacs_fep/ -o fep_report/
 simcert qsar assess -i predictions.csv -o qsar_report/
 simcert cat assess --layers-csv pt_layers.csv --area 27.60 -o cat_report/
+simcert neb assess -i neb.dat --frequencies "-1250,150,300" -o neb_report/
 
 # 3. View consolidated citations
 simcert cite
@@ -90,7 +93,7 @@ simcert cite
   author = {Monreal-Hern{\'a}ndez, Andre},
   title = {{SimCert: A Unified Scientific Simulation Quality-Control and Reproducibility Meta-Framework}},
   year = {2026},
-  version = {1.4.0},
+  version = {1.5.0},
   publisher = {Zenodo},
   url = {https://github.com/amonreal/simcert}
 }

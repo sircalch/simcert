@@ -315,6 +315,36 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                     {% endif %}
                 </div>
             </div>
+
+            <!-- Tier 9: Reaction Pathways & NEB Kinetics -->
+            <div class="tier-card">
+                <div class="tier-header">
+                    <div class="tier-title">NEB & Kinetics (NEBCert)</div>
+                    {% if report.neb_report %}
+                    <span class="tag tag-{{ report.neb_report.overall_status.lower() }}">{{ report.neb_report.overall_status }}</span>
+                    {% else %}
+                    <span class="tag" style="background-color: #334155; color: #94a3b8;">SKIPPED</span>
+                    {% endif %}
+                </div>
+                <div class="tier-body">
+                    {% if report.neb_report %}
+                    <p><strong>Reaction:</strong> {{ report.neb_report.metadata.get('reaction', 'Reaction Pathway') }}</p>
+                    {% if report.neb_report.neb_profile %}
+                    <p><strong>Barrier:</strong> E_a = {{ "%.2f"|format(report.neb_report.neb_profile.e_forward_barrier_kcal_mol) }} kcal/mol ({{ report.neb_report.neb_profile.n_images }} images)</p>
+                    {% endif %}
+                    {% if report.neb_report.ts_frequency and report.neb_report.ts_frequency.imaginary_frequency_cm1 %}
+                    <p><strong>TS Frequency:</strong> &nu; = {{ "%.1f"|format(report.neb_report.ts_frequency.imaginary_frequency_cm1) }} cm&sup1;</p>
+                    {% endif %}
+                    {% if report.neb_report.tst_kinetics %}
+                    <p><strong>TST Rate (298 K):</strong> k = {{ "%.2e"|format(report.neb_report.tst_kinetics.k_298_s_minus_1) }} s&sup1;</p>
+                    {% endif %}
+                    <p><strong>Assessment:</strong> {{ report.neb_report.validation_score }}</p>
+                    <p><a href="kinetics/report.html" style="color: var(--accent-blue); text-decoration: underline;">View Detailed Kinetics Report &rarr;</a></p>
+                    {% else %}
+                    <p>No reaction pathway or transition state evaluated.</p>
+                    {% endif %}
+                </div>
+            </div>
         </div>
 
         <h2 class="section-title">Consolidated Manuscript Methods Section</h2>
@@ -330,7 +360,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         </div>
 
         <footer>
-            Generated automatically by <strong>SimCert v1.4.0</strong> &bull; Unified Scientific Simulation Quality Meta-Framework &bull; Monreal-Hernández, 2026.
+            Generated automatically by <strong>SimCert v1.5.0</strong> &bull; Unified Scientific Simulation Quality Meta-Framework &bull; Monreal-Hernández, 2026.
         </footer>
     </div>
 
