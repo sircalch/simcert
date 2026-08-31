@@ -1,0 +1,26 @@
+{
+  "title": "SimCert: A Unified Scientific Simulation Quality-Control and Reproducibility Meta-Framework",
+  "description": "An open-source scientific umbrella meta-framework that unifies automated quality control, statistical convergence diagnostics, stationary point certification, and reproducibility reporting across Molecular Dynamics (MDCheck), Molecular Docking (DockCert), Quantum Chemistry (QMCert), and Adsorption Simulations (AdsorpQC).",
+  "creators": [
+    {
+      "name": "Monreal-Hernández, Andre",
+      "affiliation": "Doctoral Research Group"
+    }
+  ],
+  "access_right": "open",
+  "license": "MIT",
+  "keywords": [
+    "molecular simulation",
+    "molecular dynamics",
+    "molecular docking",
+    "quantum chemistry",
+    "adsorption",
+    "scientific software",
+    "reproducibility",
+    "GROMACS",
+    "ORCA",
+    "AutoDock Vina",
+    "RASPA"
+  ],
+  "upload_type": "software"
+}
