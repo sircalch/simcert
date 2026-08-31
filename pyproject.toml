@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "simcert"
-version = "1.2.0"
-description = "Unified Quality-Control, Structure Validation, and Reproducibility Meta-Framework for Molecular Simulations & AI Models (MD, Docking, QM, Adsorption, AlphaFold, FEP)"
+version = "1.3.0"
+description = "Unified Quality-Control, Structure Validation, and Reproducibility Meta-Framework for Molecular Simulations & AI Models (MD, Docking, QM, Adsorption, AlphaFold, FEP, QSAR)"
 readme = "README.md"
 authors = [
     { name = "Andre Monreal-Hernández", email = "amonreal@example.com" }
@@ -19,6 +19,10 @@ keywords = [
     "alphafold",
     "free-energy-perturbation",
     "fep",
+    "qsar",
+    "molecular-machine-learning",
+    "applicability-domain",
+    "williams-plot",
     "simulation-quality-control",
     "reproducibility",
     "gromacs",
@@ -33,7 +37,7 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
     "Topic :: Scientific/Engineering :: Chemistry",
-    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.9",
@@ -50,6 +54,7 @@ dependencies = [
     "adsorpqc>=1.0.0",
     "alphacert>=1.0.0",
     "fepcert>=1.0.0",
+    "qsarcert>=1.0.0",
     "numpy>=1.20.0",
     "scipy>=1.7.0",
     "pandas>=1.3.0",

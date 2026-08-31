@@ -13,14 +13,16 @@ from qmcert.core.scoring import assess_qm_quality
 from adsorpqc.core.scoring import assess_adsorption_quality
 from alphacert.core.scoring import assess_alphafold_quality
 from fepcert.core.scoring import assess_fep_quality
+from qsarcert.core.scoring import assess_qsar_quality
 
 from simcert.orchestrator import run_multiscale_audit
 from simcert.meta_report import generate_simcert_meta_report
 
 
 def test_multiscale_orchestrator():
-    # 1. MD (Stationary trajectory with 1000 frames)
     rng = np.random.default_rng(42)
+
+    # 1. MD (Stationary trajectory with 1000 frames)
     md_rep = assess_trajectory_quality({"RMSD": rng.normal(0.18, 0.01, 1000)})
     
     # 2. Docking
@@ -57,14 +59,31 @@ def test_multiscale_orchestrator():
         unit="kcal/mol"
     )
 
+    # 7. QSAR
+    q_tr = rng.normal(0, 1, size=(50, 4))
+    q_ev = rng.normal(0, 1, size=(15, 4))
+    q_w = np.array([2.0, -1.0, 0.5, 1.0])
+    q_y_ev = q_ev @ q_w
+    q_y_pred = q_y_ev + rng.normal(0, 0.1, size=15)
+    qsar_rep = assess_qsar_quality(
+        metadata={"endpoint": "pIC50", "algorithm": "Random Forest"},
+        y_true=q_y_ev,
+        y_pred=q_y_pred,
+        x_train=q_tr,
+        x_eval=q_ev,
+        run_y_scrambling=True,
+        n_scrambling_iterations=20
+    )
+
     meta_rep = run_multiscale_audit(
-        project_name="Complete 6-Tier Molecular Investigation",
+        project_name="Complete 7-Tier Molecular Investigation",
         md_report=md_rep,
         dock_report=dock_rep,
         qm_report=qm_rep,
         adsorp_report=adsorp_rep,
         alpha_report=alpha_rep,
-        fep_report=fep_rep
+        fep_report=fep_rep,
+        qsar_report=qsar_rep
     )
 
     assert meta_rep.overall_status in ["PASS", "WARNING"]
@@ -74,6 +93,7 @@ def test_multiscale_orchestrator():
     assert "AdsorpQC" in meta_rep.consolidated_methods
     assert "AlphaCert" in meta_rep.consolidated_methods
     assert "FEPCert" in meta_rep.consolidated_methods
+    assert "QSARCert" in meta_rep.consolidated_methods
 
     with tempfile.TemporaryDirectory() as tmpdir:
         out_html = os.path.join(tmpdir, "simcert_project_summary.html")

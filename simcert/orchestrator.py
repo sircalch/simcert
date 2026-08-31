@@ -12,6 +12,7 @@ from qmcert.core.scoring import QMCertValidationReport
 from adsorpqc.core.scoring import AdsorptionValidationReport
 from alphacert.core.scoring import AlphaFoldValidationReport
 from fepcert.core.scoring import FEPValidationReport
+from qsarcert.core.scoring import QSARValidationReport
 
 
 @dataclass
@@ -24,6 +25,7 @@ class SimCertProjectReport:
     adsorp_report: Optional[AdsorptionValidationReport]
     alpha_report: Optional[AlphaFoldValidationReport]
     fep_report: Optional[FEPValidationReport]
+    qsar_report: Optional[QSARValidationReport]
     consolidated_methods: str
     consolidated_bibtex: str
 
@@ -38,7 +40,8 @@ def run_multiscale_audit(
     qm_report: Optional[QMCertValidationReport] = None,
     adsorp_report: Optional[AdsorptionValidationReport] = None,
     alpha_report: Optional[AlphaFoldValidationReport] = None,
-    fep_report: Optional[FEPValidationReport] = None
+    fep_report: Optional[FEPValidationReport] = None,
+    qsar_report: Optional[QSARValidationReport] = None
 ) -> SimCertProjectReport:
     """
     Consolidates validation metrics across computational tiers into a single executive report.
@@ -53,6 +56,7 @@ def run_multiscale_audit(
     adsorp_report : AdsorptionValidationReport, optional
     alpha_report : AlphaFoldValidationReport, optional
     fep_report : FEPValidationReport, optional
+    qsar_report : QSARValidationReport, optional
 
     Returns
     -------
@@ -147,12 +151,26 @@ def run_multiscale_audit(
   url = {https://github.com/amonreal/fepcert}
 }""")
 
+    if qsar_report:
+        statuses.append(qsar_report.overall_status)
+        methods_parts.append(
+            f"Quantitative Structure-Activity Relationship (QSAR) and molecular machine learning models were audited for OECD Validation Principles, Applicability Domain (Williams Plot), and Y-Randomization using QSARCert v1.0.0 (Monreal-Hernández, 2026). Status: {qsar_report.overall_status}."
+        )
+        bib_parts.append("""@software{monreal2026qsarcert,
+  author = {Monreal-Hern\\'andez, Andre},
+  title = {{QSARCert: An Open-Source Toolkit for OECD Validation Principles, Applicability Domain Assessment, Y-Randomization, and Reproducibility Certification of QSAR and Molecular Machine Learning Models}},
+  year = {2026},
+  version = {1.0.0},
+  publisher = {Zenodo},
+  url = {https://github.com/amonreal/qsarcert}
+}""")
+
     # Umbrella SimCert citation
     bib_parts.append("""@software{monreal2026simcert,
   author = {Monreal-Hern\\'andez, Andre},
   title = {{SimCert: A Unified Scientific Simulation Quality-Control and Reproducibility Meta-Framework}},
   year = {2026},
-  version = {1.2.0},
+  version = {1.3.0},
   publisher = {Zenodo},
   url = {https://github.com/amonreal/simcert}
 }""")
@@ -176,6 +194,7 @@ def run_multiscale_audit(
         adsorp_report=adsorp_report,
         alpha_report=alpha_report,
         fep_report=fep_report,
+        qsar_report=qsar_report,
         consolidated_methods=consolidated_methods,
         consolidated_bibtex=consolidated_bibtex
     )

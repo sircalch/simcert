@@ -263,6 +263,31 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                     {% endif %}
                 </div>
             </div>
+
+            <!-- Tier 7: QSAR & Machine Learning -->
+            <div class="tier-card">
+                <div class="tier-header">
+                    <div class="tier-title">QSAR & ML Models (QSARCert)</div>
+                    {% if report.qsar_report %}
+                    <span class="tag tag-{{ report.qsar_report.overall_status.lower() }}">{{ report.qsar_report.overall_status }}</span>
+                    {% else %}
+                    <span class="tag" style="background-color: #334155; color: #94a3b8;">SKIPPED</span>
+                    {% endif %}
+                </div>
+                <div class="tier-body">
+                    {% if report.qsar_report %}
+                    <p><strong>Endpoint & ML:</strong> {{ report.qsar_report.metadata.get('endpoint', 'Target') }} ({{ report.qsar_report.metadata.get('algorithm', 'ML') }})</p>
+                    <p><strong>Predictivity:</strong> Q&sup2;_ext = {{ "%.3f"|format(report.qsar_report.oecd_metrics.q2_ext) }}, CCC = {{ "%.3f"|format(report.qsar_report.oecd_metrics.ccc) }}</p>
+                    {% if report.qsar_report.applicability_domain %}
+                    <p><strong>Applicability Domain:</strong> {{ "%.1f"|format(report.qsar_report.applicability_domain.pct_in_domain) }}% (h* = {{ "%.3f"|format(report.qsar_report.applicability_domain.warning_leverage) }})</p>
+                    {% endif %}
+                    <p><strong>Assessment:</strong> {{ report.qsar_report.validation_score }}</p>
+                    <p><a href="qsar/report.html" style="color: var(--accent-blue); text-decoration: underline;">View Detailed QSAR Report &rarr;</a></p>
+                    {% else %}
+                    <p>No QSAR or machine learning model evaluated.</p>
+                    {% endif %}
+                </div>
+            </div>
         </div>
 
         <h2 class="section-title">Consolidated Manuscript Methods Section</h2>
@@ -278,7 +303,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         </div>
 
         <footer>
-            Generated automatically by <strong>SimCert v1.2.0</strong> &bull; Unified Scientific Simulation Quality Meta-Framework &bull; Monreal-Hernández, 2026.
+            Generated automatically by <strong>SimCert v1.3.0</strong> &bull; Unified Scientific Simulation Quality Meta-Framework &bull; Monreal-Hernández, 2026.
         </footer>
     </div>
 

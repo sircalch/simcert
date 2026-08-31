@@ -6,33 +6,33 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1234570.svg)](https://doi.org/10.5281/zenodo.1234570)
 
-> **Unified Quality-Control, Structure Validation, and Reproducibility Meta-Framework for Molecular Simulations & AI Models (MD, Docking, QM, Adsorption, AlphaFold, FEP).**
+> **Unified Quality-Control, Structure Validation, and Reproducibility Meta-Framework for Molecular Simulations & AI Models (MD, Docking, QM, Adsorption, AlphaFold, FEP, QSAR).**
 
 ---
 
 ## Overview
 
-**SimCert** is a high-level scientific umbrella meta-framework that connects, standardizes, and unifies automated quality control, convergence certification, and reproducibility reporting across **six distinct computational simulation and structural modeling domains**:
+**SimCert** is a high-level scientific umbrella meta-framework that connects, standardizes, and unifies automated quality control, convergence certification, and reproducibility reporting across **seven distinct computational simulation and structural modeling domains**:
 
 ```
-                                    ┌─────────────────────────────────────────┐
-                                    │                 SimCert                 │
-                                    │    (Umbrella Project Meta-Dashboard)    │
-                                    └─────────────────────────────────────────┘
-                                                         │
-         ┌───────────────────┬───────────────────┬───────┴───────────┬───────────────────┬───────────────────┐
-         │                   │                   │                   │                   │                   │
-         ▼                   ▼                   ▼                   ▼                   ▼                   ▼
-   ┌───────────┐       ┌───────────┐       ┌───────────┐       ┌───────────┐       ┌───────────┐       ┌───────────┐
-   │  MDCheck  │       │ DockCert  │       │  QMCert   │       │ AdsorpQC  │       │ AlphaCert │       │  FEPCert  │
-   │  Tier 1   │       │  Tier 2   │       │  Tier 3   │       │  Tier 4   │       │  Tier 5   │       │  Tier 6   │
-   │    MD     │       │  Docking  │       │    DFT    │       │   GCMC    │       │ AlphaFold │       │ FEP / TI  │
-   └───────────┘       └───────────┘       └───────────┘       └───────────┘       └───────────┘       └───────────┘
+                                         ┌─────────────────────────────────────────┐
+                                         │                 SimCert                 │
+                                         │    (Umbrella Project Meta-Dashboard)    │
+                                         └─────────────────────────────────────────┘
+                                                              │
+         ┌───────────────────┬───────────────────┬────────────┼───────────────────┬───────────────────┬───────────────────┐
+         │                   │                   │            │                   │                   │                   │
+         ▼                   ▼                   ▼            ▼                   ▼                   ▼                   ▼
+   ┌───────────┐       ┌───────────┐       ┌───────────┐┌───────────┐       ┌───────────┐       ┌───────────┐       ┌───────────┐
+   │  MDCheck  │       │ DockCert  │       │  QMCert   ││ AdsorpQC  │       │ AlphaCert │       │  FEPCert  │       │ QSARCert  │
+   │  Tier 1   │       │  Tier 2   │       │  Tier 3   ││  Tier 4   │       │  Tier 5   │       │  Tier 6   │       │  Tier 7   │
+   │    MD     │       │  Docking  │       │    DFT    ││   GCMC    │       │ AlphaFold │       │ FEP / TI  │       │ QSAR / ML │
+   └───────────┘       └───────────┘       └───────────┘└───────────┘       └───────────┘       └───────────┘       └───────────┘
 ```
 
 ---
 
-## The 6 Computational Tiers
+## The 7 Computational Tiers
 
 1. **Tier 1: Molecular Dynamics (`mdcheck`)**
    - Autocorrelation time ($\tau_{\text{int}}$), effective sample size ($N_{\text{eff}}$), Chodera automated equilibration ($t_{\text{eq}}$), Geweke diagnostic, linear drift, multi-replica consistency ($R_1, R_2, R_3$).
@@ -46,6 +46,8 @@
    - Per-residue pLDDT categorization across 4 canonical bands ($>90, 70-90, 50-70, <50$), 2D Predicted Aligned Error (PAE) matrix domain decomposition, steric clashscore, Ramachandran dihedral distribution ($\phi, \psi$), certifications `DOCKING_READY` and `MD_READY`.
 6. **Tier 6: Alchemical Free Energy & FEP (`fepcert`)**
    - Phase space overlap matrix ($\Pi_{ij} \ge 3\%$), Thermodynamic Integration (TI), Bennett Acceptance Ratio (BAR), forward/reverse time convergence and dissipated work $W_{\text{diss}}$, thermodynamic cycle closure audit ($\oint \Delta\Delta G \approx 0$).
+7. **Tier 7: QSAR & Molecular Machine Learning (`qsarcert`)**
+   - OECD Validation Principles, Hat matrix Applicability Domain ($h^* = \frac{3(p+1)}{n}$) and Williams plot, Tropsha-Golbraikh criteria, Y-randomization ($cR^2_p > 0.50$), train/test split leakage detection.
 
 ---
 
@@ -60,7 +62,7 @@ pip install simcert
 ## Quickstart (CLI)
 
 ```bash
-# 1. Run full 6-tier multi-scale benchmark demonstration
+# 1. Run full 7-tier multi-scale benchmark demonstration
 simcert demo-all -o full_project_audit/
 
 # 2. Delegate to any individual tier
@@ -70,6 +72,7 @@ simcert qm assess -i opt_freq.out -o qm_report/
 simcert adsorp assess -i isotherm.csv -o adsorp_report/
 simcert alpha assess -i model.pdb --pae model_pae.json -o alpha_report/
 simcert fep assess -d gromacs_fep/ -o fep_report/
+simcert qsar assess -i predictions.csv -o qsar_report/
 
 # 3. View consolidated citations
 simcert cite
@@ -84,7 +87,7 @@ simcert cite
   author = {Monreal-Hern{\'a}ndez, Andre},
   title = {{SimCert: A Unified Scientific Simulation Quality-Control and Reproducibility Meta-Framework}},
   year = {2026},
-  version = {1.2.0},
+  version = {1.3.0},
   publisher = {Zenodo},
   url = {https://github.com/amonreal/simcert}
 }

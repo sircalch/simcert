@@ -14,6 +14,7 @@ import qmcert.cli
 import adsorpqc.cli
 import alphacert.cli
 import fepcert.cli
+import qsarcert.cli
 
 from mdcheck.core.scoring import assess_trajectory_quality
 from dockcert.core.scoring import assess_docking_quality
@@ -21,6 +22,7 @@ from qmcert.core.scoring import assess_qm_quality
 from adsorpqc.core.scoring import assess_adsorption_quality
 from alphacert.core.scoring import assess_alphafold_quality
 from fepcert.core.scoring import assess_fep_quality
+from qsarcert.core.scoring import assess_qsar_quality
 
 from simcert.orchestrator import run_multiscale_audit
 from simcert.meta_report import generate_simcert_meta_report
@@ -43,10 +45,10 @@ def print_banner():
 
 def run_demo_all(output_dir: str = "simcert_full_demo_output"):
     """
-    Executes a comprehensive multi-scale project demonstration certifying all 6 tiers
-    (Molecular Dynamics, Docking, Quantum Chemistry, Adsorption, AlphaFold, and Free Energy / FEP).
+    Executes a comprehensive multi-scale project demonstration certifying all 7 tiers
+    (Molecular Dynamics, Docking, Quantum Chemistry, Adsorption, AlphaFold, Free Energy / FEP, and QSAR / ML).
     """
-    print(f"\n[SimCert] Running Full-Suite Multi-Scale Demonstration (6 Computational Tiers)...")
+    print(f"\n[SimCert] Running Full-Suite Multi-Scale Demonstration (7 Computational Tiers)...")
     os.makedirs(output_dir, exist_ok=True)
     
     # 1. Run MD demo
@@ -78,16 +80,22 @@ def run_demo_all(output_dir: str = "simcert_full_demo_output"):
     fep_dir = os.path.join(output_dir, "fep")
     print("\n--- [Tier 6: Alchemical Free Energy & Cycle Closure (FEPCert)] ---")
     fepcert.cli.run_demo(output_dir=fep_dir)
+
+    # 7. Run QSARCert demo
+    qsar_dir = os.path.join(output_dir, "qsar")
+    print("\n--- [Tier 7: QSAR & Molecular Machine Learning (QSARCert)] ---")
+    qsarcert.cli.run_demo(output_dir=qsar_dir)
     
-    # 7. Build consolidated project report
+    # 8. Build consolidated project report
     print("\n--- [Generating Consolidated SimCert Project Summary Dashboard] ---")
     
     # Sample reports for meta-dashboard
-    md_rep = assess_trajectory_quality({"RMSD": np.linspace(0.15, 0.22, 500)})
+    rng = np.random.default_rng(42)
+    md_rep = assess_trajectory_quality({"RMSD": rng.normal(0.18, 0.01, 1000)})
     
     # Docking
     labels = np.array([1]*20 + [0]*180)
-    scores = np.concatenate([np.random.normal(-9.0, 0.5, 20), np.random.normal(-5.0, 1.0, 180)])
+    scores = np.concatenate([rng.normal(-9.0, 0.5, 20), rng.normal(-5.0, 1.0, 180)])
     dock_rep = assess_docking_quality(labels=labels, scores=scores)
     
     # QM
@@ -105,12 +113,28 @@ def run_demo_all(output_dir: str = "simcert_full_demo_output"):
 
     # FEP
     fep_lambdas = [0.0, 0.5, 1.0]
-    fep_grads = [np.random.normal(-4.0 * l, 1.0, 200) for l in fep_lambdas]
+    fep_grads = [rng.normal(-4.0 * l, 1.0, 200) for l in fep_lambdas]
     fep_rep = assess_fep_quality(
         metadata={"transformation": "Lig1 -> Lig2", "engine": "GROMACS 2024"},
         lambda_values=fep_lambdas,
         gradients_list=fep_grads,
         unit="kcal/mol"
+    )
+
+    # QSAR
+    q_tr = rng.normal(0, 1, size=(50, 4))
+    q_ev = rng.normal(0, 1, size=(15, 4))
+    q_w = np.array([2.0, -1.0, 0.5, 1.0])
+    q_y_ev = q_ev @ q_w
+    q_y_pred = q_y_ev + rng.normal(0, 0.1, size=15)
+    qsar_rep = assess_qsar_quality(
+        metadata={"endpoint": "pIC50", "algorithm": "Random Forest"},
+        y_true=q_y_ev,
+        y_pred=q_y_pred,
+        x_train=q_tr,
+        x_eval=q_ev,
+        run_y_scrambling=True,
+        n_scrambling_iterations=20
     )
 
     meta_rep = run_multiscale_audit(
@@ -120,7 +144,8 @@ def run_demo_all(output_dir: str = "simcert_full_demo_output"):
         qm_report=qm_rep,
         adsorp_report=adsorp_rep,
         alpha_report=alpha_rep,
-        fep_report=fep_rep
+        fep_report=fep_rep,
+        qsar_report=qsar_rep
     )
     
     meta_html = os.path.join(output_dir, "simcert_project_summary.html")
@@ -135,6 +160,7 @@ def run_demo_all(output_dir: str = "simcert_full_demo_output"):
     print(f"  * Tier 4 (Adsorption in MOFs)  : PASS (Report in {adsorp_dir}/)")
     print(f"  * Tier 5 (AlphaFold Structures): PASS (Report in {alpha_dir}/)")
     print(f"  * Tier 6 (Alchemical Free E.)  : PASS (Report in {fep_dir}/)")
+    print(f"  * Tier 7 (QSAR / Machine Learn): PASS (Report in {qsar_dir}/)")
     print("="*75)
     print(f"\nProject Hub Ready at: {os.path.abspath(meta_html)}\n")
 
@@ -144,13 +170,13 @@ def print_citation():
   author = {Monreal-Hern\\'andez, Andre},
   title = {{SimCert: A Unified Scientific Simulation Quality-Control and Reproducibility Meta-Framework}},
   year = {2026},
-  version = {1.2.0},
+  version = {1.3.0},
   publisher = {Zenodo},
   url = {https://github.com/amonreal/simcert}
 }"""
     print("\nIf you use the SimCert umbrella meta-framework in your research, please cite:\n")
     print("APA Style:")
-    print("Monreal-Hernández, A. (2026). SimCert: A Unified Scientific Simulation Quality-Control and Reproducibility Meta-Framework (v1.2.0). Zenodo. https://github.com/amonreal/simcert\n")
+    print("Monreal-Hernández, A. (2026). SimCert: A Unified Scientific Simulation Quality-Control and Reproducibility Meta-Framework (v1.3.0). Zenodo. https://github.com/amonreal/simcert\n")
     print("BibTeX:")
     print(bib)
     print()
@@ -172,8 +198,9 @@ def main():
     subparsers.add_parser("adsorp", help="Delegate to AdsorpQC (Adsorption & GCMC Simulation Validation)")
     subparsers.add_parser("alpha", help="Delegate to AlphaCert (AlphaFold & Protein Structure Certification)")
     subparsers.add_parser("fep", help="Delegate to FEPCert (Alchemical Free Energy & Cycle Closure Certification)")
+    subparsers.add_parser("qsar", help="Delegate to QSARCert (QSAR & Molecular Machine Learning Certification)")
     
-    demo_p = subparsers.add_parser("demo-all", help="Run full multi-scale demonstration benchmark (6 tiers)")
+    demo_p = subparsers.add_parser("demo-all", help="Run full multi-scale demonstration benchmark (7 tiers)")
     demo_p.add_argument("-o", "--output", default="simcert_full_demo_output", help="Output directory")
     
     subparsers.add_parser("cite", help="Display consolidated citations")
@@ -204,6 +231,9 @@ def main():
     elif first_arg == "fep":
         sys.argv = [sys.argv[0]] + sys.argv[2:]
         fepcert.cli.main()
+    elif first_arg == "qsar":
+        sys.argv = [sys.argv[0]] + sys.argv[2:]
+        qsarcert.cli.main()
     elif first_arg == "demo-all":
         print_banner()
         out = "simcert_full_demo_output"
