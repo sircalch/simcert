@@ -15,6 +15,7 @@ import adsorpqc.cli
 import alphacert.cli
 import fepcert.cli
 import qsarcert.cli
+import catcert.cli
 
 from mdcheck.core.scoring import assess_trajectory_quality
 from dockcert.core.scoring import assess_docking_quality
@@ -23,6 +24,9 @@ from adsorpqc.core.scoring import assess_adsorption_quality
 from alphacert.core.scoring import assess_alphafold_quality
 from fepcert.core.scoring import assess_fep_quality
 from qsarcert.core.scoring import assess_qsar_quality
+from catcert.core.scoring import assess_slab_quality
+from catcert.core.surface_energy import calculate_surface_energy_convergence
+from catcert.core.vacuum_potential import calculate_vacuum_potential_profile
 
 from simcert.orchestrator import run_multiscale_audit
 from simcert.meta_report import generate_simcert_meta_report
@@ -45,10 +49,10 @@ def print_banner():
 
 def run_demo_all(output_dir: str = "simcert_full_demo_output"):
     """
-    Executes a comprehensive multi-scale project demonstration certifying all 7 tiers
-    (Molecular Dynamics, Docking, Quantum Chemistry, Adsorption, AlphaFold, Free Energy / FEP, and QSAR / ML).
+    Executes a comprehensive multi-scale project demonstration certifying all 8 tiers
+    (Molecular Dynamics, Docking, Quantum Chemistry, Adsorption, AlphaFold, Free Energy / FEP, QSAR / ML, and Catalysis / Surfaces).
     """
-    print(f"\n[SimCert] Running Full-Suite Multi-Scale Demonstration (7 Computational Tiers)...")
+    print(f"\n[SimCert] Running Full-Suite Multi-Scale Demonstration (8 Computational Tiers)...")
     os.makedirs(output_dir, exist_ok=True)
     
     # 1. Run MD demo
@@ -85,11 +89,15 @@ def run_demo_all(output_dir: str = "simcert_full_demo_output"):
     qsar_dir = os.path.join(output_dir, "qsar")
     print("\n--- [Tier 7: QSAR & Molecular Machine Learning (QSARCert)] ---")
     qsarcert.cli.run_demo(output_dir=qsar_dir)
+
+    # 8. Run CatCert demo
+    cat_dir = os.path.join(output_dir, "catalysis")
+    print("\n--- [Tier 8: Heterogeneous Catalysis & Surfaces (CatCert)] ---")
+    catcert.cli.run_demo(output_dir=cat_dir)
     
-    # 8. Build consolidated project report
+    # Build consolidated project report
     print("\n--- [Generating Consolidated SimCert Project Summary Dashboard] ---")
     
-    # Sample reports for meta-dashboard
     rng = np.random.default_rng(42)
     md_rep = assess_trajectory_quality({"RMSD": rng.normal(0.18, 0.01, 1000)})
     
@@ -137,6 +145,19 @@ def run_demo_all(output_dir: str = "simcert_full_demo_output"):
         n_scrambling_iterations=20
     )
 
+    # Catalysis
+    cat_se = calculate_surface_energy_convergence(
+        slab_energies_ev=[-72.22, -96.42, -120.61],
+        n_atoms_list=[12, 16, 20],
+        layer_counts=[3, 4, 5],
+        surface_area_ang2=27.60,
+        bulk_energy_per_atom_ev=-6.045
+    )
+    cat_rep = assess_slab_quality(
+        metadata={"surface": "Pt(111)", "functional": "PBE-D3", "software": "VASP"},
+        surface_energy_res=cat_se
+    )
+
     meta_rep = run_multiscale_audit(
         project_name="Multi-Scale Drug Discovery & Nanoporous Delivery Project",
         md_report=md_rep,
@@ -145,7 +166,8 @@ def run_demo_all(output_dir: str = "simcert_full_demo_output"):
         adsorp_report=adsorp_rep,
         alpha_report=alpha_rep,
         fep_report=fep_rep,
-        qsar_report=qsar_rep
+        qsar_report=qsar_rep,
+        cat_report=cat_rep
     )
     
     meta_html = os.path.join(output_dir, "simcert_project_summary.html")
@@ -161,6 +183,7 @@ def run_demo_all(output_dir: str = "simcert_full_demo_output"):
     print(f"  * Tier 5 (AlphaFold Structures): PASS (Report in {alpha_dir}/)")
     print(f"  * Tier 6 (Alchemical Free E.)  : PASS (Report in {fep_dir}/)")
     print(f"  * Tier 7 (QSAR / Machine Learn): PASS (Report in {qsar_dir}/)")
+    print(f"  * Tier 8 (Heterogeneous Cat.)  : PASS (Report in {cat_dir}/)")
     print("="*75)
     print(f"\nProject Hub Ready at: {os.path.abspath(meta_html)}\n")
 
@@ -170,13 +193,13 @@ def print_citation():
   author = {Monreal-Hern\\'andez, Andre},
   title = {{SimCert: A Unified Scientific Simulation Quality-Control and Reproducibility Meta-Framework}},
   year = {2026},
-  version = {1.3.0},
+  version = {1.4.0},
   publisher = {Zenodo},
   url = {https://github.com/amonreal/simcert}
 }"""
     print("\nIf you use the SimCert umbrella meta-framework in your research, please cite:\n")
     print("APA Style:")
-    print("Monreal-Hernández, A. (2026). SimCert: A Unified Scientific Simulation Quality-Control and Reproducibility Meta-Framework (v1.3.0). Zenodo. https://github.com/amonreal/simcert\n")
+    print("Monreal-Hernández, A. (2026). SimCert: A Unified Scientific Simulation Quality-Control and Reproducibility Meta-Framework (v1.4.0). Zenodo. https://github.com/amonreal/simcert\n")
     print("BibTeX:")
     print(bib)
     print()
@@ -199,8 +222,9 @@ def main():
     subparsers.add_parser("alpha", help="Delegate to AlphaCert (AlphaFold & Protein Structure Certification)")
     subparsers.add_parser("fep", help="Delegate to FEPCert (Alchemical Free Energy & Cycle Closure Certification)")
     subparsers.add_parser("qsar", help="Delegate to QSARCert (QSAR & Molecular Machine Learning Certification)")
+    subparsers.add_parser("cat", help="Delegate to CatCert (Heterogeneous Catalysis & DFT Slab Certification)")
     
-    demo_p = subparsers.add_parser("demo-all", help="Run full multi-scale demonstration benchmark (7 tiers)")
+    demo_p = subparsers.add_parser("demo-all", help="Run full multi-scale demonstration benchmark (8 tiers)")
     demo_p.add_argument("-o", "--output", default="simcert_full_demo_output", help="Output directory")
     
     subparsers.add_parser("cite", help="Display consolidated citations")
@@ -210,7 +234,6 @@ def main():
         parser.print_help()
         sys.exit(0)
         
-    # Check if first arg is a delegated module
     first_arg = sys.argv[1].lower() if len(sys.argv) > 1 else ""
     
     if first_arg == "md":
@@ -234,6 +257,9 @@ def main():
     elif first_arg == "qsar":
         sys.argv = [sys.argv[0]] + sys.argv[2:]
         qsarcert.cli.main()
+    elif first_arg == "cat":
+        sys.argv = [sys.argv[0]] + sys.argv[2:]
+        catcert.cli.main()
     elif first_arg == "demo-all":
         print_banner()
         out = "simcert_full_demo_output"

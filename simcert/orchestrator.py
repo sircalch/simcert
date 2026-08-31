@@ -13,6 +13,7 @@ from adsorpqc.core.scoring import AdsorptionValidationReport
 from alphacert.core.scoring import AlphaFoldValidationReport
 from fepcert.core.scoring import FEPValidationReport
 from qsarcert.core.scoring import QSARValidationReport
+from catcert.core.scoring import SlabQualityReport
 
 
 @dataclass
@@ -26,6 +27,7 @@ class SimCertProjectReport:
     alpha_report: Optional[AlphaFoldValidationReport]
     fep_report: Optional[FEPValidationReport]
     qsar_report: Optional[QSARValidationReport]
+    cat_report: Optional[SlabQualityReport]
     consolidated_methods: str
     consolidated_bibtex: str
 
@@ -41,27 +43,11 @@ def run_multiscale_audit(
     adsorp_report: Optional[AdsorptionValidationReport] = None,
     alpha_report: Optional[AlphaFoldValidationReport] = None,
     fep_report: Optional[FEPValidationReport] = None,
-    qsar_report: Optional[QSARValidationReport] = None
+    qsar_report: Optional[QSARValidationReport] = None,
+    cat_report: Optional[SlabQualityReport] = None
 ) -> SimCertProjectReport:
     """
-    Consolidates validation metrics across computational tiers into a single executive report.
-
-    Parameters
-    ----------
-    project_name : str
-        Title of the manuscript or project.
-    md_report : SimulationQualityReport, optional
-    dock_report : DockingValidationReport, optional
-    qm_report : QMCertValidationReport, optional
-    adsorp_report : AdsorptionValidationReport, optional
-    alpha_report : AlphaFoldValidationReport, optional
-    fep_report : FEPValidationReport, optional
-    qsar_report : QSARValidationReport, optional
-
-    Returns
-    -------
-    report : SimCertProjectReport
-        Consolidated multi-scale report.
+    Consolidates validation metrics across 8 computational tiers into a single executive report.
     """
     statuses = []
     methods_parts = []
@@ -165,12 +151,26 @@ def run_multiscale_audit(
   url = {https://github.com/amonreal/qsarcert}
 }""")
 
+    if cat_report:
+        statuses.append(cat_report.overall_status)
+        methods_parts.append(
+            f"Heterogeneous catalysis surface slab models, vacuum potential flatness, work functions, and surface energy layer convergence were certified using CatCert v1.0.0 (Monreal-Hernández, 2026). Status: {cat_report.overall_status}."
+        )
+        bib_parts.append("""@software{monreal2026catcert,
+  author = {Monreal-Hern\\'andez, Andre},
+  title = {{CatCert: Automated Quality-Control, Vacuum Thickness, Dipole Correction, and Surface Energy Convergence Certification for Heterogeneous Catalysis & DFT Surface Slabs}},
+  year = {2026},
+  version = {1.0.0},
+  publisher = {Zenodo},
+  url = {https://github.com/amonreal/catcert}
+}""")
+
     # Umbrella SimCert citation
     bib_parts.append("""@software{monreal2026simcert,
   author = {Monreal-Hern\\'andez, Andre},
   title = {{SimCert: A Unified Scientific Simulation Quality-Control and Reproducibility Meta-Framework}},
   year = {2026},
-  version = {1.3.0},
+  version = {1.4.0},
   publisher = {Zenodo},
   url = {https://github.com/amonreal/simcert}
 }""")
@@ -195,6 +195,7 @@ def run_multiscale_audit(
         alpha_report=alpha_report,
         fep_report=fep_report,
         qsar_report=qsar_report,
+        cat_report=cat_report,
         consolidated_methods=consolidated_methods,
         consolidated_bibtex=consolidated_bibtex
     )

@@ -65,7 +65,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
         .grid-tiers {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2.5rem;
         }
@@ -288,6 +288,33 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                     {% endif %}
                 </div>
             </div>
+
+            <!-- Tier 8: Heterogeneous Catalysis & Surfaces -->
+            <div class="tier-card">
+                <div class="tier-header">
+                    <div class="tier-title">Heterogeneous Catalysis (CatCert)</div>
+                    {% if report.cat_report %}
+                    <span class="tag tag-{{ report.cat_report.overall_status.lower() }}">{{ report.cat_report.overall_status }}</span>
+                    {% else %}
+                    <span class="tag" style="background-color: #334155; color: #94a3b8;">SKIPPED</span>
+                    {% endif %}
+                </div>
+                <div class="tier-body">
+                    {% if report.cat_report %}
+                    <p><strong>Surface & Code:</strong> {{ report.cat_report.metadata.get('surface', 'Facet') }} ({{ report.cat_report.metadata.get('software', 'DFT') }})</p>
+                    {% if report.cat_report.surface_energy %}
+                    <p><strong>Surface Energy:</strong> &gamma; = {{ "%.3f"|format(report.cat_report.surface_energy.converged_gamma_j_m2) }} J/m&sup2; (&Delta;&gamma; = {{ "%.4f"|format(report.cat_report.surface_energy.final_delta_gamma_j_m2) }})</p>
+                    {% endif %}
+                    {% if report.cat_report.vacuum_potential %}
+                    <p><strong>Vacuum & Work Func:</strong> {{ "%.1f"|format(report.cat_report.vacuum_potential.vacuum_thickness_ang) }} &Aring; (Phi = {{ "%.2f"|format(report.cat_report.vacuum_potential.work_function_ev if report.cat_report.vacuum_potential.work_function_ev else 0.0) }} eV)</p>
+                    {% endif %}
+                    <p><strong>Assessment:</strong> {{ report.cat_report.validation_score }}</p>
+                    <p><a href="catalysis/report.html" style="color: var(--accent-blue); text-decoration: underline;">View Detailed Catalysis Report &rarr;</a></p>
+                    {% else %}
+                    <p>No heterogeneous catalysis surface slab evaluated.</p>
+                    {% endif %}
+                </div>
+            </div>
         </div>
 
         <h2 class="section-title">Consolidated Manuscript Methods Section</h2>
@@ -303,7 +330,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         </div>
 
         <footer>
-            Generated automatically by <strong>SimCert v1.3.0</strong> &bull; Unified Scientific Simulation Quality Meta-Framework &bull; Monreal-Hernández, 2026.
+            Generated automatically by <strong>SimCert v1.4.0</strong> &bull; Unified Scientific Simulation Quality Meta-Framework &bull; Monreal-Hernández, 2026.
         </footer>
     </div>
 

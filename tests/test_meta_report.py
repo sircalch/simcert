@@ -14,6 +14,8 @@ from adsorpqc.core.scoring import assess_adsorption_quality
 from alphacert.core.scoring import assess_alphafold_quality
 from fepcert.core.scoring import assess_fep_quality
 from qsarcert.core.scoring import assess_qsar_quality
+from catcert.core.scoring import assess_slab_quality
+from catcert.core.surface_energy import calculate_surface_energy_convergence
 
 from simcert.orchestrator import run_multiscale_audit
 from simcert.meta_report import generate_simcert_meta_report
@@ -22,7 +24,7 @@ from simcert.meta_report import generate_simcert_meta_report
 def test_multiscale_orchestrator():
     rng = np.random.default_rng(42)
 
-    # 1. MD (Stationary trajectory with 1000 frames)
+    # 1. MD
     md_rep = assess_trajectory_quality({"RMSD": rng.normal(0.18, 0.01, 1000)})
     
     # 2. Docking
@@ -75,15 +77,29 @@ def test_multiscale_orchestrator():
         n_scrambling_iterations=20
     )
 
+    # 8. Catalysis
+    cat_se = calculate_surface_energy_convergence(
+        slab_energies_ev=[-72.22, -96.42, -120.61],
+        n_atoms_list=[12, 16, 20],
+        layer_counts=[3, 4, 5],
+        surface_area_ang2=27.60,
+        bulk_energy_per_atom_ev=-6.045
+    )
+    cat_rep = assess_slab_quality(
+        metadata={"surface": "Pt(111)", "functional": "PBE-D3", "software": "VASP"},
+        surface_energy_res=cat_se
+    )
+
     meta_rep = run_multiscale_audit(
-        project_name="Complete 7-Tier Molecular Investigation",
+        project_name="Complete 8-Tier Molecular Investigation",
         md_report=md_rep,
         dock_report=dock_rep,
         qm_report=qm_rep,
         adsorp_report=adsorp_rep,
         alpha_report=alpha_rep,
         fep_report=fep_rep,
-        qsar_report=qsar_rep
+        qsar_report=qsar_rep,
+        cat_report=cat_rep
     )
 
     assert meta_rep.overall_status in ["PASS", "WARNING"]
@@ -94,6 +110,7 @@ def test_multiscale_orchestrator():
     assert "AlphaCert" in meta_rep.consolidated_methods
     assert "FEPCert" in meta_rep.consolidated_methods
     assert "QSARCert" in meta_rep.consolidated_methods
+    assert "CatCert" in meta_rep.consolidated_methods
 
     with tempfile.TemporaryDirectory() as tmpdir:
         out_html = os.path.join(tmpdir, "simcert_project_summary.html")
