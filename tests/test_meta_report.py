@@ -21,29 +21,74 @@ from nebcert.core.neb_profile import calculate_neb_profile_analysis
 from nebcert.core.ts_frequency import verify_ts_frequency_and_irc
 from nebcert.core.tst_kinetics import calculate_eyring_tst_rates
 from nebcert.core.tunneling import calculate_quantum_tunneling_corrections
+from speccert.core.scoring import assess_spectroscopy_quality
+from speccert.core.uv_vis import calculate_uv_vis_spectrum
+from speccert.core.vibrational import calculate_scaled_vibrational_spectrum
+from speccert.core.dos_dband import calculate_dos_and_dband_center
 
 from simcert.orchestrator import run_multiscale_audit
 from simcert.meta_report import generate_simcert_meta_report
 
 
-def test_multiscale_orchestrator():
+def _make_neb_reports(rng):
+    neb_calc = calculate_neb_profile_analysis(
+        energies_ev=[0.0, 0.05, 0.15, 0.23, 0.10, -0.25, -0.62],
+        coordinates_s_ang=[0.0, 0.4, 0.8, 1.2, 1.6, 2.0, 2.4]
+    )
+    neb_ts = verify_ts_frequency_and_irc([-1250.0, 120.0, 300.0], irc_confirmed=True)
+    neb_tst = calculate_eyring_tst_rates(neb_calc.e_forward_barrier_ev)
+    neb_tun = calculate_quantum_tunneling_corrections(
+        1250.0, neb_calc.e_forward_barrier_ev, neb_calc.e_reverse_barrier_ev
+    )
+    neb_rep = assess_reaction_pathway_quality(
+        metadata={"reaction": "CH4 + OH -> CH3 + H2O", "functional": "wB97X-D3", "software": "ORCA"},
+        neb_res=neb_calc,
+        ts_freq_res=neb_ts,
+        tst_res=neb_tst,
+        tunneling_res=neb_tun
+    )
+    return neb_rep
+
+
+def _make_spec_report():
+    uv_c = calculate_uv_vis_spectrum([2.14, 2.96, 3.45], [0.15, 1.25, 0.45])
+    vib_c = calculate_scaled_vibrational_spectrum(
+        [820.0, 1490.0, 1680.0, 3120.0], functional="wB97X-D"
+    )
+    e_dos = np.linspace(-6.0, 3.0, 200)
+    dos_c = calculate_dos_and_dband_center(
+        e_dos.tolist(),
+        (np.exp(-0.5 * (e_dos + 2.0) ** 2) + 0.5).tolist(),
+        np.exp(-0.5 * (e_dos + 2.0) ** 2).tolist(),
+        0.0
+    )
+    return assess_spectroscopy_quality(
+        metadata={"system": "Pt-Porphyrin Dye", "functional": "wB97X-D", "software": "ORCA/VASP"},
+        uv_vis_res=uv_c,
+        vib_res=vib_c,
+        dos_res=dos_c
+    )
+
+
+def test_multiscale_orchestrator_10_tiers():
+    """Full 10-tier multi-scale audit should pass."""
     rng = np.random.default_rng(42)
 
     # 1. MD
     md_rep = assess_trajectory_quality({"RMSD": rng.normal(0.18, 0.01, 1000)})
-    
+
     # 2. Docking
-    labels = np.array([1]*10 + [0]*90)
+    labels = np.array([1] * 10 + [0] * 90)
     scores = np.concatenate([rng.normal(-9.0, 0.5, 10), rng.normal(-5.0, 1.0, 90)])
     dock_rep = assess_docking_quality(labels=labels, scores=scores)
-    
+
     # 3. QM
     qm_rep = assess_qm_quality(
         metadata={"engine": "ORCA", "functional": "B3LYP"},
         scf_converged=True,
         frequencies=[200.0, 800.0, 1600.0]
     )
-    
+
     # 4. Adsorption
     adsorp_rep = assess_adsorption_quality(
         metadata={"framework": "HKUST-1", "adsorbate": "CH4"},
@@ -54,15 +99,15 @@ def test_multiscale_orchestrator():
     # 5. AlphaFold
     alpha_rep = assess_alphafold_quality(
         metadata={"name": "Protein", "engine": "AlphaFold2"},
-        plddt_values=[85.0]*50,
-        pae_matrix=np.ones((50, 50))*2.5
+        plddt_values=[85.0] * 50,
+        pae_matrix=np.ones((50, 50)) * 2.5
     )
 
     # 6. FEP
     fep_rep = assess_fep_quality(
         metadata={"transformation": "Lig1 -> Lig2", "engine": "GROMACS"},
         lambda_values=[0.0, 0.5, 1.0],
-        gradients_list=[rng.normal(-3.0*l, 1.0, 200) for l in [0.0, 0.5, 1.0]],
+        gradients_list=[rng.normal(-3.0 * l, 1.0, 200) for l in [0.0, 0.5, 1.0]],
         unit="kcal/mol"
     )
 
@@ -96,23 +141,13 @@ def test_multiscale_orchestrator():
     )
 
     # 9. NEB / Kinetics
-    neb_calc = calculate_neb_profile_analysis(
-        energies_ev=[0.0, 0.05, 0.15, 0.23, 0.10, -0.25, -0.62],
-        coordinates_s_ang=[0.0, 0.4, 0.8, 1.2, 1.6, 2.0, 2.4]
-    )
-    neb_ts = verify_ts_frequency_and_irc([-1250.0, 120.0, 300.0], irc_confirmed=True)
-    neb_tst = calculate_eyring_tst_rates(neb_calc.e_forward_barrier_ev)
-    neb_tun = calculate_quantum_tunneling_corrections(1250.0, neb_calc.e_forward_barrier_ev, neb_calc.e_reverse_barrier_ev)
-    neb_rep = assess_reaction_pathway_quality(
-        metadata={"reaction": "CH4 + OH -> CH3 + H2O", "functional": "wB97X-D3", "software": "ORCA"},
-        neb_res=neb_calc,
-        ts_freq_res=neb_ts,
-        tst_res=neb_tst,
-        tunneling_res=neb_tun
-    )
+    neb_rep = _make_neb_reports(rng)
+
+    # 10. Spectroscopy
+    spec_rep = _make_spec_report()
 
     meta_rep = run_multiscale_audit(
-        project_name="Complete 9-Tier Molecular Investigation",
+        project_name="Complete 10-Tier Molecular Investigation",
         md_report=md_rep,
         dock_report=dock_rep,
         qm_report=qm_rep,
@@ -121,22 +156,33 @@ def test_multiscale_orchestrator():
         fep_report=fep_rep,
         qsar_report=qsar_rep,
         cat_report=cat_rep,
-        neb_report=neb_rep
+        neb_report=neb_rep,
+        spec_report=spec_rep
     )
 
     assert meta_rep.overall_status in ["PASS", "WARNING"]
-    assert "MDCheck" in meta_rep.consolidated_methods
-    assert "DockCert" in meta_rep.consolidated_methods
-    assert "QMCert" in meta_rep.consolidated_methods
-    assert "AdsorpQC" in meta_rep.consolidated_methods
-    assert "AlphaCert" in meta_rep.consolidated_methods
-    assert "FEPCert" in meta_rep.consolidated_methods
-    assert "QSARCert" in meta_rep.consolidated_methods
-    assert "CatCert" in meta_rep.consolidated_methods
-    assert "NEBCert" in meta_rep.consolidated_methods
+    for name in [
+        "MDCheck", "DockCert", "QMCert", "AdsorpQC",
+        "AlphaCert", "FEPCert", "QSARCert", "CatCert",
+        "NEBCert", "SpecCert"
+    ]:
+        assert name in meta_rep.consolidated_methods, f"{name} not in consolidated_methods"
 
     with tempfile.TemporaryDirectory() as tmpdir:
         out_html = os.path.join(tmpdir, "simcert_project_summary.html")
         generate_simcert_meta_report(meta_rep, out_html)
         assert os.path.exists(out_html)
         assert os.path.getsize(out_html) > 1000
+
+
+def test_multiscale_orchestrator_partial_spec_only():
+    """Partial audit using only SpecCert tier should succeed."""
+    spec_rep = _make_spec_report()
+    meta_rep = run_multiscale_audit(
+        project_name="Spec Only Project",
+        spec_report=spec_rep
+    )
+    assert meta_rep.overall_status in ["PASS", "WARNING"]
+    assert "SpecCert" in meta_rep.consolidated_methods
+    assert meta_rep.md_report is None
+    assert meta_rep.neb_report is None

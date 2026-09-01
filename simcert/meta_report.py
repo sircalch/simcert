@@ -345,6 +345,36 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                     {% endif %}
                 </div>
             </div>
+
+            <!-- Tier 10: Spectroscopy & Electronic Structure -->
+            <div class="tier-card">
+                <div class="tier-header">
+                    <div class="tier-title">Spectroscopy (SpecCert)</div>
+                    {% if report.spec_report %}
+                    <span class="tag tag-{{ report.spec_report.overall_status.lower() }}">{{ report.spec_report.overall_status }}</span>
+                    {% else %}
+                    <span class="tag" style="background-color: #334155; color: #94a3b8;">SKIPPED</span>
+                    {% endif %}
+                </div>
+                <div class="tier-body">
+                    {% if report.spec_report %}
+                    <p><strong>System:</strong> {{ report.spec_report.metadata.get('system', 'Molecule / Surface') }}</p>
+                    {% if report.spec_report.uv_vis %}
+                    <p><strong>UV-Vis Absorption:</strong> &lambda;_max = {{ "%.1f"|format(report.spec_report.uv_vis.lambda_max_nm) }} nm (f = {{ "%.3f"|format(report.spec_report.uv_vis.max_oscillator_strength) }})</p>
+                    {% endif %}
+                    {% if report.spec_report.vibrational %}
+                    <p><strong>IR Scaling:</strong> Factor {{ "%.4f"|format(report.spec_report.vibrational.scaling_factor_applied) }} ({{ report.spec_report.vibrational.n_modes }} modes)</p>
+                    {% endif %}
+                    {% if report.spec_report.dos_analysis and report.spec_report.dos_analysis.d_band_center_filled_ev is not none %}
+                    <p><strong>d-Band Center:</strong> &epsilon;_d = {{ "%.3f"|format(report.spec_report.dos_analysis.d_band_center_filled_ev) }} eV rel to E_F</p>
+                    {% endif %}
+                    <p><strong>Assessment:</strong> {{ report.spec_report.validation_score }}</p>
+                    <p><a href="spectroscopy/report.html" style="color: var(--accent-blue); text-decoration: underline;">View Detailed Spectroscopy Report &rarr;</a></p>
+                    {% else %}
+                    <p>No spectroscopy or electronic DOS evaluated.</p>
+                    {% endif %}
+                </div>
+            </div>
         </div>
 
         <h2 class="section-title">Consolidated Manuscript Methods Section</h2>
@@ -360,7 +390,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         </div>
 
         <footer>
-            Generated automatically by <strong>SimCert v1.5.0</strong> &bull; Unified Scientific Simulation Quality Meta-Framework &bull; Monreal-Hernández, 2026.
+            Generated automatically by <strong>SimCert v1.6.0</strong> &bull; Unified Scientific Simulation Quality Meta-Framework &bull; Monreal-Hernández, 2026.
         </footer>
     </div>
 

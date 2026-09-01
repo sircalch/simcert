@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "simcert"
-version = "1.5.0"
-description = "Unified Quality-Control, Structure Validation, and Reproducibility Meta-Framework for Molecular Simulations & AI Models (MD, Docking, QM, Adsorption, AlphaFold, FEP, QSAR, Catalysis, NEB/Kinetics)"
+version = "1.6.0"
+description = "Unified Quality-Control, Structure Validation, and Reproducibility Meta-Framework for Molecular Simulations & AI Models (MD, Docking, QM, Adsorption, AlphaFold, FEP, QSAR, Catalysis, NEB/Kinetics, Spectroscopy/DOS)"
 readme = "README.md"
 authors = [
     { name = "Andre Monreal-Hernández", email = "amonreal@example.com" }
@@ -23,9 +23,11 @@ keywords = [
     "heterogeneous-catalysis",
     "nudged-elastic-band",
     "chemical-kinetics",
-    "reaction-pathways",
-    "transition-state-theory",
-    "quantum-tunneling",
+    "spectroscopy",
+    "td-dft",
+    "uv-vis",
+    "infrared-spectroscopy",
+    "d-band-center",
     "simulation-quality-control",
     "reproducibility",
     "gromacs",
@@ -59,6 +61,7 @@ dependencies = [
     "qsarcert>=1.0.0",
     "catcert>=1.0.0",
     "nebcert>=1.0.0",
+    "speccert>=1.0.0",
     "numpy>=1.20.0",
     "scipy>=1.7.0",
     "pandas>=1.3.0",

@@ -17,6 +17,7 @@ import fepcert.cli
 import qsarcert.cli
 import catcert.cli
 import nebcert.cli
+import speccert.cli
 
 from mdcheck.core.scoring import assess_trajectory_quality
 from dockcert.core.scoring import assess_docking_quality
@@ -32,6 +33,10 @@ from nebcert.core.neb_profile import calculate_neb_profile_analysis
 from nebcert.core.ts_frequency import verify_ts_frequency_and_irc
 from nebcert.core.tst_kinetics import calculate_eyring_tst_rates
 from nebcert.core.tunneling import calculate_quantum_tunneling_corrections
+from speccert.core.scoring import assess_spectroscopy_quality
+from speccert.core.uv_vis import calculate_uv_vis_spectrum
+from speccert.core.vibrational import calculate_scaled_vibrational_spectrum
+from speccert.core.dos_dband import calculate_dos_and_dband_center
 
 from simcert.orchestrator import run_multiscale_audit
 from simcert.meta_report import generate_simcert_meta_report
@@ -54,10 +59,10 @@ def print_banner():
 
 def run_demo_all(output_dir: str = "simcert_full_demo_output"):
     """
-    Executes a comprehensive multi-scale project demonstration certifying all 9 tiers
-    (Molecular Dynamics, Docking, Quantum Chemistry, Adsorption, AlphaFold, Free Energy / FEP, QSAR / ML, Catalysis, and NEB / Kinetics).
+    Executes a comprehensive multi-scale project demonstration certifying all 10 tiers
+    (MD, Docking, QM, Adsorption, AlphaFold, FEP, QSAR, Catalysis, NEB, and Spectroscopy).
     """
-    print(f"\n[SimCert] Running Full-Suite Multi-Scale Demonstration (9 Computational Tiers)...")
+    print(f"\n[SimCert] Running Full-Suite Multi-Scale Demonstration (10 Computational Tiers)...")
     os.makedirs(output_dir, exist_ok=True)
     
     # 1. Run MD demo
@@ -104,6 +109,11 @@ def run_demo_all(output_dir: str = "simcert_full_demo_output"):
     neb_dir = os.path.join(output_dir, "kinetics")
     print("\n--- [Tier 9: Reaction Pathways & NEB Kinetics (NEBCert)] ---")
     nebcert.cli.run_demo(output_dir=neb_dir)
+
+    # 10. Run SpecCert demo
+    spec_dir = os.path.join(output_dir, "spectroscopy")
+    print("\n--- [Tier 10: Spectroscopy & Electronic Structure (SpecCert)] ---")
+    speccert.cli.run_demo(output_dir=spec_dir)
     
     # Build consolidated project report
     print("\n--- [Generating Consolidated SimCert Project Summary Dashboard] ---")
@@ -184,8 +194,20 @@ def run_demo_all(output_dir: str = "simcert_full_demo_output"):
         tunneling_res=neb_tun
     )
 
+    # Spectroscopy
+    uv_c = calculate_uv_vis_spectrum([2.14, 2.96, 3.45], [0.15, 1.25, 0.45])
+    vib_c = calculate_scaled_vibrational_spectrum([820.0, 1490.0, 1680.0, 3120.0], functional="wB97X-D")
+    e_dos = np.linspace(-6.0, 3.0, 200)
+    dos_c = calculate_dos_and_dband_center(e_dos.tolist(), (np.exp(-0.5*(e_dos+2.0)**2) + 0.5).tolist(), np.exp(-0.5*(e_dos+2.0)**2).tolist(), 0.0)
+    spec_rep = assess_spectroscopy_quality(
+        metadata={"system": "Pt-Porphyrin Dye", "functional": "wB97X-D", "software": "ORCA / VASP"},
+        uv_vis_res=uv_c,
+        vib_res=vib_c,
+        dos_res=dos_c
+    )
+
     meta_rep = run_multiscale_audit(
-        project_name="Multi-Scale Chemical & Molecular Discovery Project",
+        project_name="Multi-Scale Chemical, Catalytic & Molecular Discovery Project",
         md_report=md_rep,
         dock_report=dock_rep,
         qm_report=qm_rep,
@@ -194,7 +216,8 @@ def run_demo_all(output_dir: str = "simcert_full_demo_output"):
         fep_report=fep_rep,
         qsar_report=qsar_rep,
         cat_report=cat_rep,
-        neb_report=neb_rep
+        neb_report=neb_rep,
+        spec_report=spec_rep
     )
     
     meta_html = os.path.join(output_dir, "simcert_project_summary.html")
@@ -212,6 +235,7 @@ def run_demo_all(output_dir: str = "simcert_full_demo_output"):
     print(f"  * Tier 7 (QSAR / Machine Learn): PASS (Report in {qsar_dir}/)")
     print(f"  * Tier 8 (Heterogeneous Cat.)  : PASS (Report in {cat_dir}/)")
     print(f"  * Tier 9 (Reaction NEB Kinetics: PASS (Report in {neb_dir}/)")
+    print(f"  * Tier 10 (Spectroscopy & DOS) : PASS (Report in {spec_dir}/)")
     print("="*75)
     print(f"\nProject Hub Ready at: {os.path.abspath(meta_html)}\n")
 
@@ -221,13 +245,13 @@ def print_citation():
   author = {Monreal-Hern\\'andez, Andre},
   title = {{SimCert: A Unified Scientific Simulation Quality-Control and Reproducibility Meta-Framework}},
   year = {2026},
-  version = {1.5.0},
+  version = {1.6.0},
   publisher = {Zenodo},
   url = {https://github.com/amonreal/simcert}
 }"""
     print("\nIf you use the SimCert umbrella meta-framework in your research, please cite:\n")
     print("APA Style:")
-    print("Monreal-Hernández, A. (2026). SimCert: A Unified Scientific Simulation Quality-Control and Reproducibility Meta-Framework (v1.5.0). Zenodo. https://github.com/amonreal/simcert\n")
+    print("Monreal-Hernández, A. (2026). SimCert: A Unified Scientific Simulation Quality-Control and Reproducibility Meta-Framework (v1.6.0). Zenodo. https://github.com/amonreal/simcert\n")
     print("BibTeX:")
     print(bib)
     print()
@@ -252,8 +276,9 @@ def main():
     subparsers.add_parser("qsar", help="Delegate to QSARCert (QSAR & Molecular Machine Learning Certification)")
     subparsers.add_parser("cat", help="Delegate to CatCert (Heterogeneous Catalysis & DFT Slab Certification)")
     subparsers.add_parser("neb", help="Delegate to NEBCert (Reaction Pathways, NEB & Chemical Kinetics Certification)")
+    subparsers.add_parser("spec", help="Delegate to SpecCert (Spectroscopy Simulation, TD-DFT UV-Vis, IR & DOS Certification)")
     
-    demo_p = subparsers.add_parser("demo-all", help="Run full multi-scale demonstration benchmark (9 tiers)")
+    demo_p = subparsers.add_parser("demo-all", help="Run full multi-scale demonstration benchmark (10 tiers)")
     demo_p.add_argument("-o", "--output", default="simcert_full_demo_output", help="Output directory")
     
     subparsers.add_parser("cite", help="Display consolidated citations")
@@ -292,6 +317,9 @@ def main():
     elif first_arg == "neb":
         sys.argv = [sys.argv[0]] + sys.argv[2:]
         nebcert.cli.main()
+    elif first_arg == "spec":
+        sys.argv = [sys.argv[0]] + sys.argv[2:]
+        speccert.cli.main()
     elif first_arg == "demo-all":
         print_banner()
         out = "simcert_full_demo_output"
