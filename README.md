@@ -1,6 +1,6 @@
-# SimCert
+﻿# SimCert
 
-[![CI](https://github.com/amonreal/simcert/actions/workflows/test.yml/badge.svg)](https://github.com/amonreal/simcert/actions)
+[![CI](https://github.com/sircalch/simcert/actions/workflows/test.yml/badge.svg)](https://github.com/sircalch/simcert/actions)
 [![PyPI version](https://img.shields.io/pypi/v/simcert.svg?color=blue)](https://pypi.org/project/simcert/)
 [![Python versions](https://img.shields.io/pypi/pyversions/simcert.svg)](https://pypi.org/project/simcert/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -95,7 +95,7 @@ simcert cite
   year = {2026},
   version = {1.5.0},
   publisher = {Zenodo},
-  url = {https://github.com/amonreal/simcert}
+  url = {https://github.com/sircalch/simcert}
 }
 ```
 
@@ -104,3 +104,4 @@ simcert cite
 ## License
 
 This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+

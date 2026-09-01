@@ -1,4 +1,4 @@
-cff-version: 1.2.0
+﻿cff-version: 1.2.0
 message: "If you use SimCert in your research to validate molecular simulations across MD, Docking, Quantum Chemistry, or Adsorption, please cite it as below."
 authors:
   - family-names: "Monreal-Hernández"
@@ -7,8 +7,8 @@ authors:
 title: "SimCert: A Unified Scientific Simulation Quality-Control and Reproducibility Meta-Framework"
 version: 1.0.0
 date-released: 2026-08-31
-url: "https://github.com/amonreal/simcert"
-repository-code: "https://github.com/amonreal/simcert"
+url: "https://github.com/sircalch/simcert"
+repository-code: "https://github.com/sircalch/simcert"
 keywords:
   - "molecular simulations"
   - "molecular dynamics"
@@ -18,3 +18,4 @@ keywords:
   - "quality control"
   - "reproducibility"
 license: MIT
+

@@ -1,4 +1,4 @@
-"""
+﻿"""
 Multi-scale simulation project orchestrator for SimCert.
 """
 
@@ -70,7 +70,7 @@ def run_multiscale_audit(
   year = {2026},
   version = {1.0.0},
   publisher = {Zenodo},
-  url = {https://github.com/amonreal/mdcheck}
+  url = {https://github.com/sircalch/mdcheck}
 }""")
 
     if dock_report:
@@ -84,7 +84,7 @@ def run_multiscale_audit(
   year = {2026},
   version = {1.0.0},
   publisher = {Zenodo},
-  url = {https://github.com/amonreal/dockcert}
+  url = {https://github.com/sircalch/dockcert}
 }""")
 
     if qm_report:
@@ -98,7 +98,7 @@ def run_multiscale_audit(
   year = {2026},
   version = {1.0.0},
   publisher = {Zenodo},
-  url = {https://github.com/amonreal/qmcert}
+  url = {https://github.com/sircalch/qmcert}
 }""")
 
     if adsorp_report:
@@ -112,7 +112,7 @@ def run_multiscale_audit(
   year = {2026},
   version = {1.0.0},
   publisher = {Zenodo},
-  url = {https://github.com/amonreal/adsorpqc}
+  url = {https://github.com/sircalch/adsorpqc}
 }""")
 
     if alpha_report:
@@ -126,7 +126,7 @@ def run_multiscale_audit(
   year = {2026},
   version = {1.0.0},
   publisher = {Zenodo},
-  url = {https://github.com/amonreal/alphacert}
+  url = {https://github.com/sircalch/alphacert}
 }""")
 
     if fep_report:
@@ -140,7 +140,7 @@ def run_multiscale_audit(
   year = {2026},
   version = {1.0.0},
   publisher = {Zenodo},
-  url = {https://github.com/amonreal/fepcert}
+  url = {https://github.com/sircalch/fepcert}
 }""")
 
     if qsar_report:
@@ -154,7 +154,7 @@ def run_multiscale_audit(
   year = {2026},
   version = {1.0.0},
   publisher = {Zenodo},
-  url = {https://github.com/amonreal/qsarcert}
+  url = {https://github.com/sircalch/qsarcert}
 }""")
 
     if cat_report:
@@ -168,7 +168,7 @@ def run_multiscale_audit(
   year = {2026},
   version = {1.0.0},
   publisher = {Zenodo},
-  url = {https://github.com/amonreal/catcert}
+  url = {https://github.com/sircalch/catcert}
 }""")
 
     if neb_report:
@@ -182,7 +182,7 @@ def run_multiscale_audit(
   year = {2026},
   version = {1.0.0},
   publisher = {Zenodo},
-  url = {https://github.com/amonreal/nebcert}
+  url = {https://github.com/sircalch/nebcert}
 }""")
 
     if spec_report:
@@ -196,7 +196,7 @@ def run_multiscale_audit(
   year = {2026},
   version = {1.0.0},
   publisher = {Zenodo},
-  url = {https://github.com/amonreal/speccert}
+  url = {https://github.com/sircalch/speccert}
 }""")
 
     # Umbrella SimCert citation
@@ -206,7 +206,7 @@ def run_multiscale_audit(
   year = {2026},
   version = {1.6.0},
   publisher = {Zenodo},
-  url = {https://github.com/amonreal/simcert}
+  url = {https://github.com/sircalch/simcert}
 }""")
 
     if "FAIL" in statuses:
@@ -235,3 +235,4 @@ def run_multiscale_audit(
         consolidated_methods=consolidated_methods,
         consolidated_bibtex=consolidated_bibtex
     )
+

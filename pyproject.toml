@@ -1,4 +1,4 @@
-[build-system]
+﻿[build-system]
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
@@ -83,8 +83,9 @@ dev = [
 simcert = "simcert.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/amonreal/simcert"
-Documentation = "https://github.com/amonreal/simcert#readme"
-Repository = "https://github.com/amonreal/simcert.git"
-"Bug Tracker" = "https://github.com/amonreal/simcert/issues"
-Changelog = "https://github.com/amonreal/simcert/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/sircalch/simcert"
+Documentation = "https://github.com/sircalch/simcert#readme"
+Repository = "https://github.com/sircalch/simcert.git"
+"Bug Tracker" = "https://github.com/sircalch/simcert/issues"
+Changelog = "https://github.com/sircalch/simcert/blob/main/CHANGELOG.md"
+

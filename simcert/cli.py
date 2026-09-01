@@ -1,4 +1,4 @@
-"""
+﻿"""
 Unified Command Line Interface for SimCert.
 """
 
@@ -247,11 +247,11 @@ def print_citation():
   year = {2026},
   version = {1.6.0},
   publisher = {Zenodo},
-  url = {https://github.com/amonreal/simcert}
+  url = {https://github.com/sircalch/simcert}
 }"""
     print("\nIf you use the SimCert umbrella meta-framework in your research, please cite:\n")
     print("APA Style:")
-    print("Monreal-Hernández, A. (2026). SimCert: A Unified Scientific Simulation Quality-Control and Reproducibility Meta-Framework (v1.6.0). Zenodo. https://github.com/amonreal/simcert\n")
+    print("Monreal-Hernández, A. (2026). SimCert: A Unified Scientific Simulation Quality-Control and Reproducibility Meta-Framework (v1.6.0). Zenodo. https://github.com/sircalch/simcert\n")
     print("BibTeX:")
     print(bib)
     print()
@@ -341,3 +341,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
