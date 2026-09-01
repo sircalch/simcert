@@ -3,7 +3,7 @@ SimCert: Unified Scientific Simulation Quality-Control and Reproducibility Meta-
 """
 
 __version__ = "1.0.0"
-__author__ = "Andre Monreal-Hernández"
+__author__ = "Andres Monreal-Hernández"
 __license__ = "MIT"
 
 import mdcheck

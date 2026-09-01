@@ -3,7 +3,8 @@
   "description": "An open-source scientific umbrella meta-framework that unifies automated quality control, statistical convergence diagnostics, stationary point certification, and reproducibility reporting across Molecular Dynamics (MDCheck), Molecular Docking (DockCert), Quantum Chemistry (QMCert), and Adsorption Simulations (AdsorpQC).",
   "creators": [
     {
-      "name": "Monreal-Hernández, Andre",
+      "name": "Monreal-Hernández, Andres",
+      "orcid": "0009-0009-1207-8597",
       "affiliation": "Doctoral Research Group"
     }
   ],

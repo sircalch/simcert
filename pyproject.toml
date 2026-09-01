@@ -8,7 +8,7 @@ version = "1.6.0"
 description = "Unified Quality-Control, Structure Validation, and Reproducibility Meta-Framework for Molecular Simulations & AI Models (MD, Docking, QM, Adsorption, AlphaFold, FEP, QSAR, Catalysis, NEB/Kinetics, Spectroscopy/DOS)"
 readme = "README.md"
 authors = [
-    { name = "Andre Monreal-Hernández", email = "amonreal@example.com" }
+    { name = "Andres Monreal-Hernández", email = "amonreal@example.com" }
 ]
 license = { text = "MIT" }
 keywords = [
