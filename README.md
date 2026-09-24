@@ -57,8 +57,13 @@
 
 ## Installation
 
+> **Note:** PyPI release pending. Until then, install from the tagged GitHub releases (SimCert depends on all ten certifiers):
+
 ```bash
-pip install simcert
+for p in mdcheck dockcert qmcert adsorpqc alphacert fepcert qsarcert catcert nebcert speccert; do
+  pip install "$p @ git+https://github.com/sircalch/$p@v1.0.0"
+done
+pip install "git+https://github.com/sircalch/simcert@v1.6.0"
 ```
 
 ---

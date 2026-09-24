@@ -23,8 +23,13 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Install dependencies
+      shell: bash
       run: |
         python -m pip install --upgrade pip
+        # Sibling certifiers are not all on PyPI yet; install them from their tagged GitHub releases.
+        for p in mdcheck dockcert qmcert adsorpqc alphacert fepcert qsarcert catcert nebcert speccert; do
+          pip install "$p @ git+https://github.com/sircalch/$p@v1.0.0"
+        done
         pip install -e .[dev]
 
     - name: Run tests with pytest
